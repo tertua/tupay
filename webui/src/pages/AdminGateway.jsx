@@ -3,7 +3,6 @@ import { FolderKanban, Send, ShieldCheck, XCircle } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { AdminGatewayCreateForm } from "@/components/admin/AdminGatewayCreateForm";
 import { AdminGatewayCredentials } from "@/components/admin/AdminGatewayCredentials";
-import { AdminGatewayStatusBanner } from "@/components/admin/AdminGatewayStatusBanner";
 import { AdminTableSkeleton } from "@/components/admin/AdminTableSkeleton";
 import { PageStat, PageStatStrip } from "@/components/admin/PageStatStrip";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -26,7 +25,6 @@ export default function AdminGateway() {
     <div>
       <PageHeader title={t("gateway.title")} description={t("gateway.desc")} />
       {credentials && <AdminGatewayCredentials project={credentials} onClose={() => setCredentials(null)} />}
-      <AdminGatewayStatusBanner />
       <PageStatStrip>
         <PageStat label={t("admin.statProjects")} value={projects.length} icon={FolderKanban} tone="accent" />
         <PageStat label={t("admin.statActive")} value={active} icon={ShieldCheck} tone="success" />
