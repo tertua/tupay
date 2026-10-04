@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v2.4.1] - 2026-10-04
+
+### Fixed
+- Invoice detail carries its line items and payments again. The editor showed an
+  empty item list after "Save & send" even though the rows were stored, and a
+  follow-up save would have replaced them, because the response omitted `items`
+  and `payments`.
+
+### Changed
+- The admin Gateway console no longer repeats the gateway availability panel —
+  the console header already reports the configured/sandbox/live status.
+
 ## [v2.4.0] - 2026-10-03
 
 ### Changed
