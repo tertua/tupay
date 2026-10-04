@@ -83,6 +83,8 @@ func invoiceDetail(db database.Queries, orgID, id uuid.UUID) (invoiceDetailRespo
 		Notes:           invoice.Notes,
 		Terms:           invoice.Terms,
 		PaymentMethod:   invoice.PaymentMethod,
+		Items:           out.Items,
+		Payments:        out.Payments,
 		PaidAmount:      paid,
 		Balance:         invoice.Total.Sub(paid),
 	}, nil

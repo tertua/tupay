@@ -3,8 +3,14 @@ package controllers
 import (
 	"encoding/json"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
+	"github.com/shopspring/decimal"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
+	"github.com/tertua/tupay/app/models"
+	"github.com/tertua/tupay/platform/database"
 )
 
 func marshalKeys(t *testing.T, v any) map[string]json.RawMessage {
@@ -122,4 +128,70 @@ func TestPublicInvoiceDetailJSONShape(t *testing.T) {
 	if _, ok := rows[0]["can_void"]; ok {
 		t.Error("public payment row must not leak can_void")
 	}
+}
+
+// TestInvoiceDetailCarriesItemsAndPayments pins the regression where
+// invoiceDetail built out.Items/out.Payments but returned a struct literal
+// that dropped both, so every read path answered items: null while the rows
+// sat in invoice_items (the "save & send, result empty" report).
+func TestInvoiceDetailCarriesItemsAndPayments(t *testing.T) {
+	db, err := database.OpenDBConnection()
+	require.NoError(t, err)
+
+	userID := approvalSeedUser(t, "detail-items@example.com")
+	orgID := approvalSeedOrg(t, userID, "Detail Items Org")
+
+	now := time.Now()
+	invoice := &models.Invoice{
+		ID:        uuid.New(),
+		CreatedAt: now,
+		UpdatedAt: &now,
+		UserID:    userID,
+		OrgID:     orgID,
+		Status:    models.InvoiceStatusSent,
+		IssueDate: &now,
+		DueDate:   &now,
+		Currency:  "IDR",
+		Subtotal:  decimal.RequireFromString("375000"),
+		Total:     decimal.RequireFromString("375000"),
+	}
+	client := models.Client{ID: uuid.New(), UserID: userID, OrgID: orgID, Name: "Detail Client"}
+	require.NoError(t, db.CreateClient(&client))
+	invoice.ClientID = &client.ID
+
+	items := []models.InvoiceItem{
+		{ID: uuid.New(), InvoiceID: invoice.ID, Description: "Desain", Quantity: 1,
+			Rate: decimal.RequireFromString("150000"), Amount: decimal.RequireFromString("150000"), Position: 0},
+		{ID: uuid.New(), InvoiceID: invoice.ID, Description: "Development", Quantity: 2,
+			Rate: decimal.RequireFromString("100000"), Amount: decimal.RequireFromString("200000"), Position: 1},
+	}
+	require.NoError(t, db.CreateInvoice(orgID, invoice, items))
+
+	paidOn := now
+	payment := &models.Payment{
+		ID: uuid.New(), UserID: userID, OrgID: orgID, InvoiceID: invoice.ID,
+		Amount: decimal.RequireFromString("375000"), Method: "cash", PaidOn: &paidOn, CreatedAt: now,
+	}
+	require.NoError(t, db.CreatePayment(payment))
+
+	detail, err := invoiceDetail(*db, orgID, invoice.ID)
+	require.NoError(t, err)
+
+	require.Len(t, detail.Items, 2, "invoiceDetail must return the persisted line items")
+	assert.Equal(t, "Desain", detail.Items[0].Description)
+	assert.Equal(t, "Development", detail.Items[1].Description)
+	require.Len(t, detail.Payments, 1, "invoiceDetail must return the persisted payments")
+	assert.Equal(t, decimal.RequireFromString("375000").String(), detail.PaidAmount.String())
+
+	// The wire payload is what the editor reloads, so assert it too — the struct
+	// could carry the rows and still fail to serialize them.
+	var rows []json.RawMessage
+	blob, err := json.Marshal(detail)
+	require.NoError(t, err)
+	var wire map[string]json.RawMessage
+	require.NoError(t, json.Unmarshal(blob, &wire))
+	require.NoError(t, json.Unmarshal(wire["items"], &rows), "items must serialize as an array, not null")
+	assert.Len(t, rows, 2, "serialized items rows")
+	require.NoError(t, json.Unmarshal(wire["payments"], &rows))
+	assert.Len(t, rows, 1, "serialized payments rows")
 }
