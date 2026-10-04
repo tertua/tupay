@@ -242,4 +242,25 @@ var migrations = []Migration{
 			return db.Migrator().DropIndex(&models.User{}, userEmailIndexName)
 		},
 	},
+	{
+		Version:     22,
+		Description: "automatic payment reminders (invoice_reminder_log + per-org schedule)",
+		// Down drops the reminder ledger and the three per-org schedule columns.
+		// AutoMigrate re-adds nothing on rollback; the next startup with this
+		// binary re-applies them (forward upgrades run through AutoMigrate).
+		Down: func(db *gorm.DB) error {
+			if err := db.Migrator().DropTable(&models.InvoiceReminderLog{}); err != nil {
+				return err
+			}
+			for _, col := range []string{"reminder_enabled", "reminder_before_days", "reminder_after_days"} {
+				if !db.Migrator().HasColumn(&models.Settings{}, col) {
+					continue
+				}
+				if err := db.Migrator().DropColumn(&models.Settings{}, col); err != nil {
+					return err
+				}
+			}
+			return nil
+		},
+	},
 }

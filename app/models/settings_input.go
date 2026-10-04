@@ -17,9 +17,12 @@ type SettingsInput struct {
 	ProviderMethods string `json:"provider_methods" validate:"omitempty,lte=255"`
 	// MidtransMethods is the DEPRECATED input alias for ProviderMethods, kept
 	// until clients migrate; provider_methods wins when both are sent.
-	MidtransMethods string `json:"midtrans_methods" validate:"omitempty,lte=255"`
-	InvoicePrefix   string `json:"invoice_prefix" validate:"required,lte=20"`
-	Language        string `json:"language" validate:"omitempty,oneof=en id"`
+	MidtransMethods    string `json:"midtrans_methods" validate:"omitempty,lte=255"`
+	InvoicePrefix      string `json:"invoice_prefix" validate:"required,lte=20"`
+	Language           string `json:"language" validate:"omitempty,oneof=en id"`
+	ReminderEnabled    bool   `json:"reminder_enabled"`
+	ReminderBeforeDays int    `json:"reminder_before_days" validate:"gte=0,lte=365"`
+	ReminderAfterDays  int    `json:"reminder_after_days" validate:"gte=0,lte=365"`
 }
 
 // EffectiveProviderMethods resolves the settings method value, preferring the

@@ -16,6 +16,9 @@ func applySettingsInput(settings *models.Settings, input *models.SettingsInput) 
 	settings.UsdToIdr = input.UsdToIdr
 	settings.ProviderMethods = input.ProviderMethods
 	settings.InvoicePrefix = input.InvoicePrefix
+	settings.ReminderEnabled = input.ReminderEnabled
+	settings.ReminderBeforeDays = input.ReminderBeforeDays
+	settings.ReminderAfterDays = input.ReminderAfterDays
 	if input.Language == "en" || input.Language == "id" {
 		settings.Language = input.Language
 	}

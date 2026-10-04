@@ -152,7 +152,7 @@
  "platform/database/health.go": 47,
  "platform/database/migrations.go": 86,
  "platform/database/migrations_test.go": 152,
- "platform/database/open_db_connection.go": 134,
+ "platform/database/open_db_connection.go": 109,
  "platform/database/pg_integration_test.go": 75,
  "platform/database/version_guard_test.go": 41,
  "platform/gateway/gateway.go": 112,

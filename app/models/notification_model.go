@@ -17,11 +17,11 @@ const (
 	NotifEventTest                 = "notification.test"
 )
 
-// NotifAllowedEvents are subscribable via endpoint Events CSV. Empty Events
-// means all. notification.test bypasses the filter (manual send only).
+// NotifAllowedEvents are subscribable via endpoint Events CSV. Empty Events means all (notification.test bypasses the filter).
 var NotifAllowedEvents = []string{
 	NotifEventInvoiceCreated,
 	NotifEventInvoiceStatusUpdated,
+	NotifEventInvoiceReminder,
 	NotifEventPaymentCreated,
 	NotifEventPaymentVoided,
 }

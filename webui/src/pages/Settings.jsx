@@ -14,7 +14,7 @@ import { authApi } from "@/api/auth";
 import { useSettings, useUpdateSettings, useUploadLogo } from "@/hooks/useSettings";
 import NotificationsTab from "@/components/settings/NotificationsTab";
 import OrgTab from "@/components/settings/OrgTab";
-import DefaultsCard from "@/components/settings/DefaultsCard";
+import InvoicingDefaults from "@/components/settings/InvoicingDefaults";
 
 import { cn } from "@/lib/utils";
 
@@ -43,6 +43,9 @@ function CompanySection() {
         tax_rate: Number(settings.tax_rate) || 0,
         usd_to_idr: settings.usd_to_idr && Number(settings.usd_to_idr) ? String(settings.usd_to_idr) : "",
         invoice_prefix: settings.invoice_prefix || "INV-",
+        reminder_enabled: settings.reminder_enabled !== false,
+        reminder_before_days: settings.reminder_before_days ?? 7,
+        reminder_after_days: settings.reminder_after_days ?? 3,
       });
     }
   }, [settings, form]);
@@ -84,6 +87,8 @@ function CompanySection() {
         ...form,
         tax_rate: Number(form.tax_rate) || 0,
         usd_to_idr: form.usd_to_idr === "" ? "0" : String(form.usd_to_idr),
+        reminder_before_days: Number(form.reminder_before_days) || 0,
+        reminder_after_days: Number(form.reminder_after_days) || 0,
       });
       toast.success(t("settings.companySaved"));
     } catch (err) {
@@ -154,7 +159,12 @@ function CompanySection() {
         </div>
       </Card>
 
-      <DefaultsCard form={form} set={set} selectClass={selectClass} />
+      <InvoicingDefaults
+        form={form}
+        set={set}
+        selectClass={selectClass}
+        onToggleEnabled={(v) => setForm((f) => ({ ...f, reminder_enabled: v }))}
+      />
 
 
       <div className="flex justify-end">

@@ -4,7 +4,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/shopspring/decimal"
 )
 
 // Settings struct to describe per-org business settings; user_id remains the audit creator.
@@ -21,14 +20,8 @@ type Settings struct {
 	TaxRate     float64   `db:"tax_rate" json:"tax_rate" validate:"gte=0"`
 	SettingsGatewayConversion
 	SettingsGatewayMethods
+	SettingsReminder
 	InvoicePrefix string `db:"invoice_prefix" json:"invoice_prefix" validate:"required,lte=20"`
 	InvoiceSeq    int    `db:"invoice_seq" json:"-"`
 	Language      string `db:"language" json:"language" validate:"omitempty,oneof=en id"`
-}
-
-// DefaultSettings returns first-run defaults (tax rate, USD→IDR, invoice prefix) keyed by userID; orgID rides as userID until register provisions the personal org (D7).
-func DefaultSettings(userID uuid.UUID) *Settings {
-	s := &Settings{OrgID: userID, UserID: userID, UpdatedAt: time.Now(), Currency: "IDR", TaxRate: 11, InvoicePrefix: "INV-"}
-	s.UsdToIdr = decimal.NewFromInt(18000)
-	return s
 }

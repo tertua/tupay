@@ -39,18 +39,21 @@ func CreateSettingsTx(tx *gorm.DB, s *models.Settings) error {
 func (q *SettingsQueries) UpdateSettings(s *models.Settings) error {
 	if err := q.Model(&models.Settings{}).Where("org_id = ?", s.OrgID).
 		Updates(map[string]any{
-			"updated_at":       time.Now(),
-			"company_name":     s.CompanyName,
-			"email":            s.Email,
-			"phone":            s.Phone,
-			"address":          s.Address,
-			"logo_url":         s.LogoURL,
-			"currency":         s.Currency,
-			"tax_rate":         s.TaxRate,
-			"usd_to_idr":       s.UsdToIdr,
-			"provider_methods": s.ProviderMethods,
-			"invoice_prefix":   s.InvoicePrefix,
-			"language":         s.Language,
+			"updated_at":           time.Now(),
+			"company_name":         s.CompanyName,
+			"email":                s.Email,
+			"phone":                s.Phone,
+			"address":              s.Address,
+			"logo_url":             s.LogoURL,
+			"currency":             s.Currency,
+			"tax_rate":             s.TaxRate,
+			"usd_to_idr":           s.UsdToIdr,
+			"provider_methods":     s.ProviderMethods,
+			"invoice_prefix":       s.InvoicePrefix,
+			"language":             s.Language,
+			"reminder_enabled":     s.ReminderEnabled,
+			"reminder_before_days": s.ReminderBeforeDays,
+			"reminder_after_days":  s.ReminderAfterDays,
 		}).Error; err != nil {
 		return err
 	}

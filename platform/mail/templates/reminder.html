@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background-color:#f4f6f8;font-family:Arial,Helvetica,sans-serif;">
+  <div style="max-width:560px;margin:0 auto;padding:32px 24px;">
+    <div style="background-color:#ffffff;border-radius:12px;padding:32px;box-shadow:0 1px 3px rgba(0,0,0,0.08);">
+      {{if eq .Kind "after"}}
+      <h1 style="margin:0 0 8px;font-size:22px;color:#0f172a;">Invoice {{.InvoiceNumber}} is overdue</h1>
+      <p style="margin:0 0 16px;font-size:14px;color:#475569;">Hello,</p>
+      <p style="margin:0 0 24px;font-size:14px;color:#475569;">Invoice {{.InvoiceNumber}} for {{.Total}} {{.Currency}} was due on {{.DueDate}} and is now overdue. Please arrange payment as soon as possible.</p>
+      {{else}}
+      <h1 style="margin:0 0 8px;font-size:22px;color:#0f172a;">Reminder: invoice {{.InvoiceNumber}} due soon</h1>
+      <p style="margin:0 0 16px;font-size:14px;color:#475569;">Hello,</p>
+      <p style="margin:0 0 24px;font-size:14px;color:#475569;">Invoice {{.InvoiceNumber}} for {{.Total}} {{.Currency}} is due on {{.DueDate}}. Please use the button below to pay it.</p>
+      {{end}}
+      <a href="{{.URL}}" style="display:inline-block;background-color:#0d9488;color:#ffffff;text-decoration:none;font-size:14px;font-weight:bold;padding:12px 24px;border-radius:8px;">Pay now</a>
+      <p style="margin:24px 0 0;font-size:12px;color:#94a3b8;">If the button does not work, paste this link into your browser:<br><a href="{{.URL}}" style="color:#0d9488;">{{.URL}}</a></p>
+    </div>
+    <p style="margin:16px 0 0;font-size:12px;color:#94a3b8;text-align:center;">{{.AppName}} &middot; Thank you.</p>
+  </div>
+</body>
+</html>
