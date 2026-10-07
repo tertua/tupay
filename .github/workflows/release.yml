@@ -1,0 +1,71 @@
+name: Release
+
+# make promote-prod only cuts the annotated tag v$(VERSION); nothing used to
+# turn that tag into a GitHub Release, so the Releases page stayed empty.
+# This workflow closes that gap: tag push -> Release whose notes are the
+# "## [vX.Y.Z]" section already written in webui/CHANGELOG.md (the same
+# section version-check.yml enforces), so release notes are never retyped.
+# workflow_dispatch republishes an existing tag (e.g. after a missed release).
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to publish, e.g. v2.4.1"
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.tag || github.ref }}
+
+      - name: Create release from changelog
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VERSION: ${{ inputs.tag || github.ref_name }}
+        run: |
+          set -euo pipefail
+          test "${VERSION#v}" != "${VERSION}" || {
+            echo "FAIL: tag '${VERSION}' must use the v-prefix (vX.Y.Z)."
+            exit 1
+          }
+          # The tag must be the version this commit actually declares; a
+          # pre-release suffix (v2.5.0-rc.1) still ships VERSION=2.5.0.
+          base="${VERSION#v}"; base="${base%%-*}"
+          test "$(cat VERSION)" = "${base}" || {
+            echo "FAIL: tag '${VERSION}' does not match VERSION '$(cat VERSION)' at this commit."
+            exit 1
+          }
+          if gh release view "${VERSION}" >/dev/null 2>&1; then
+            echo "release ${VERSION} exists, skip"
+            exit 0
+          fi
+          # index() instead of a regex: the version dots must match literally.
+          notes="$(awk -v ver="${VERSION}" '
+            index($0, "## [" ver "]") == 1 { found = 1; insec = 1; next }
+            insec && /^## \[/ { insec = 0 }
+            insec && !started && /^[[:space:]]*$/ { next }
+            insec { started = 1; printf "%s\n", $0 }
+            END { if (!found) exit 3 }
+          ' webui/CHANGELOG.md)" || {
+            echo "FAIL: webui/CHANGELOG.md has no '## [${VERSION}]' section."
+            echo "Release notes come from the changelog; add the section first."
+            exit 1
+          }
+          prerelease=()
+          case "${VERSION}" in *-*) prerelease=(--prerelease) ;; esac
+          gh release create "${VERSION}" \
+            --verify-tag \
+            --title "${VERSION}" \
+            --notes "${notes}" \
+            "${prerelease[@]+"${prerelease[@]}"}"
+          echo "OK: release ${VERSION} published."
