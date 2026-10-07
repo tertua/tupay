@@ -119,14 +119,16 @@ promote:
 	git checkout dev
 
 # main -> master (ff-only by construction) + annotated tag v$(VERSION), idempotent.
+# The tag is created when missing and then always pushed: the push is a no-op
+# when origin already has it, but it repairs a tag that only ever existed
+# locally. Checking local refs alone was the old bug — after one failed tag
+# push (v1.1.0) every later run printed "exists, skip" and origin never got it.
 promote-prod:
 	git fetch origin --prune
 	git push origin origin/main:refs/heads/master
-	@if git rev-parse -q --verify "refs/tags/v$(VERSION)" >/dev/null; then \
-		echo "tag v$(VERSION) exists, skip"; \
-	else \
-		git tag -a "v$(VERSION)" -m "release v$(VERSION)" origin/master && git push origin "v$(VERSION)"; \
-	fi
+	@git rev-parse -q --verify "refs/tags/v$(VERSION)" >/dev/null || \
+		git tag -a "v$(VERSION)" -m "release v$(VERSION)" origin/master
+	git push origin "v$(VERSION)"
 	@echo "OK: master at $$(git rev-parse --short origin/master), tag v$(VERSION)."
 
 check-flow:
