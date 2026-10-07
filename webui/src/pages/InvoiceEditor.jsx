@@ -71,7 +71,7 @@ export default function InvoiceEditor() {
           discount: existing.discount || 0,
           notes: existing.notes || "",
           terms: existing.terms || "",
-          payment_method: existing.payment_method || "",
+          payment_method: existing.payment_method || "Cash",
           items: existing.items?.length
             ? existing.items.map((it) => ({
                 description: it.description,
@@ -92,7 +92,7 @@ export default function InvoiceEditor() {
         discount: 0,
         notes: "",
         terms: "",
-        payment_method: "",
+        payment_method: "Online",
         items: [blankItem()],
       });
     }
@@ -268,9 +268,9 @@ export default function InvoiceEditor() {
                   ))}
                 </select>
               </Field>
-              <Field label={t("invEditor.paymentMethod")} className="sm:col-span-2">
+              <div className="sm:col-span-2">
                 <PaymentMethodField value={form.payment_method || ""} disabled={!form.client_id} onChange={(v) => set({ payment_method: v })} />
-              </Field>
+              </div>
               <Field label={t("invEditor.issueDate")}>
                 <Input
                   type="date"

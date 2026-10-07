@@ -1,24 +1,26 @@
 import { useLang } from "@/context/LangContext";
-import { PAYMENT_METHODS } from "@/lib/paymentMethods";
+import { Checkbox } from "@/components/ui/Checkbox";
 
-const selectClass =
-  "h-10 w-full rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 text-sm text-[var(--ink)] outline-none focus:border-[var(--accent)]/50 focus:ring-2 focus:ring-[var(--accent)]/15 disabled:opacity-50 disabled:cursor-not-allowed";
-
+// payment_method is a two-state choice in the editor, not a routing input:
+// "Online" opts the invoice into the auto-created public payment link on
+// Save & send (payment_link_ensure.go) and hides the manual record-payment
+// button; off writes "Cash" because the client pays offline. The backend enum
+// keeps "Bank transfer" for existing rows, and RecordPaymentModal still
+// offers all three when logging how the money actually arrived.
 export function PaymentMethodField({ value, disabled, onChange }) {
   const { t } = useLang();
+  const online = value === "Online";
   return (
-    <>
-      <select
-        className={selectClass}
-        value={value}
+    <div>
+      <Checkbox
+        checked={online}
         disabled={disabled}
-        onChange={(e) => onChange(e.target.value)}
-      >
-        <option value="">{t("invEditor.noMethod")}</option>
-        {PAYMENT_METHODS.map((m) => (
-          <option key={m} value={m}>{m}</option>
-        ))}
-      </select>
-    </>
+        onChange={(v) => onChange(v ? "Online" : "Cash")}
+        label={t("invEditor.onlinePayment")}
+      />
+      <p className="text-[11px] text-[var(--ink-muted)] mt-1.5">
+        {t("invEditor.onlinePaymentHint")}
+      </p>
+    </div>
   );
 }

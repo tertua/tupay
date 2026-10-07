@@ -1,16 +1,15 @@
 import { Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function Checkbox({ checked, onChange, className, label }) {
+export function Checkbox({ checked, onChange, className, label, disabled }) {
   return (
     <button
       type="button"
-      role="checkbox"
-      aria-checked={checked}
+      role="checkbox" aria-checked={checked} disabled={disabled}
       onClick={() => onChange(!checked)}
       className={cn(
         "inline-flex items-center gap-2 select-none rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40",
-        className
+        disabled && "opacity-50 cursor-not-allowed", className
       )}
     >
       <span
