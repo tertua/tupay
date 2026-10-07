@@ -263,4 +263,13 @@ var migrations = []Migration{
 			return nil
 		},
 	},
+	{
+		Version:     23,
+		Description: "public client portal links (client_links, token hashed at rest)",
+		// Fresh additive table: Down drops it; AutoMigrate recreates it on the
+		// next startup with this binary (forward upgrades run via AutoMigrate).
+		Down: func(db *gorm.DB) error {
+			return db.Migrator().DropTable(&models.ClientLink{})
+		},
+	},
 }

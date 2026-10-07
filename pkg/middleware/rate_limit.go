@@ -69,6 +69,12 @@ func PublicPayLimiter() fiber.Handler {
 	return newLimiter(configs.Get().RateLimit.Public, func(c fiber.Ctx) string { return "pub:" + c.IP() })
 }
 
+// PublicClientLimiter guards the public client portal. A distinct key prefix
+// keeps a busy pay page from starving the portal (they share one storage).
+func PublicClientLimiter() fiber.Handler {
+	return newLimiter(configs.Get().RateLimit.Public, func(c fiber.Ctx) string { return "pubclient:" + c.IP() })
+}
+
 // WebhookLimiter guards provider webhooks.
 func WebhookLimiter() fiber.Handler {
 	return newLimiter(configs.Get().RateLimit.Webhook, func(c fiber.Ctx) string { return "wh:" + c.IP() })

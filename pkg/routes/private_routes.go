@@ -25,12 +25,8 @@ func PrivateRoutesAt(a *fiber.App, prefix string) {
 	route.Patch("/auth/password", controllers.ChangePassword) // change password
 	route.Post("/auth/logout", controllers.Logout)            // end session
 
-	// Client routes:
-	route.Get("/clients", controllers.ListClients)         // get all clients
-	route.Post("/clients", controllers.CreateClient)       // create a new client
-	route.Get("/clients/:id", controllers.GetClient)       // get client with invoices and stats
-	route.Patch("/clients/:id", controllers.UpdateClient)  // update a client
-	route.Delete("/clients/:id", controllers.DeleteClient) // delete a client
+	// Client routes (CRUD + owner-only portal link lifecycle):
+	registerClientRoutes(route)
 
 	// Invoice routes:
 	registerInvoiceRoutes(route)

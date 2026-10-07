@@ -11,6 +11,7 @@ const ForgotPassword = lazy(() => import("@/pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("@/pages/ResetPassword"));
 const VerifyEmail = lazy(() => import("@/pages/VerifyEmail"));
 const PublicPay = lazy(() => import("@/pages/PublicPay"));
+const ClientPortal = lazy(() => import("@/pages/ClientPortal"));
 const PaymentFinish = lazy(() => import("@/pages/PaymentFinish"));
 
 function RegisterRoute() {
@@ -37,6 +38,7 @@ export const publicRoutes = [
   { path: "/reset-password", element: <ResetPassword />, errorElement: <RouteError /> },
   { path: "/verify-email", element: <VerifyEmail />, errorElement: <RouteError /> },
   { path: "/pay/:token", element: <PublicPay />, errorElement: <RouteError /> },
+  { path: "/client/:token", element: <ClientPortal />, errorElement: <RouteError /> },
   { path: "/payment/finish", element: <PaymentFinish />, errorElement: <RouteError /> },
 ];
 

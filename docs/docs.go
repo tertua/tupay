@@ -1443,6 +1443,105 @@ const docTemplate = `{
                 }
             }
         },
+        "/clients/{id}/portal": {
+            "delete": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "Revoke the public client portal link for a client.",
+                "tags": [
+                    "Clients"
+                ],
+                "summary": "revoke client portal link",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "ok",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "Ensure the public client portal link for a client.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Clients"
+                ],
+                "summary": "ensure client portal link",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/clients/{id}/portal/regenerate": {
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "Regenerate the public client portal link for a client.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Clients"
+                ],
+                "summary": "regenerate client portal link",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/config": {
             "get": {
                 "description": "Get public application configuration.",
@@ -3445,6 +3544,73 @@ const docTemplate = `{
                 }
             }
         },
+        "/public/client/{token}": {
+            "get": {
+                "description": "Get a public client portal.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public Client"
+                ],
+                "summary": "get public client portal",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client portal token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/public/client/{token}/invoice/{id}": {
+            "get": {
+                "description": "Get a public client invoice detail.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Public Client"
+                ],
+                "summary": "get public client invoice",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Client portal token",
+                        "name": "token",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Invoice ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/public/gateway/status": {
             "get": {
                 "description": "Get public payment gateway availability.",
@@ -4486,6 +4652,19 @@ const docTemplate = `{
                     "description": "ProviderMethods is the single legacy gateway method id for the default\nprovider. normalizeProviderMethods pins it to the provider's declared\ndefault (qris for the default provider); other providers keep the raw\ntrimmed value.",
                     "type": "string",
                     "maxLength": 255
+                },
+                "reminder_after_days": {
+                    "type": "integer",
+                    "maximum": 365,
+                    "minimum": 0
+                },
+                "reminder_before_days": {
+                    "type": "integer",
+                    "maximum": 365,
+                    "minimum": 0
+                },
+                "reminder_enabled": {
+                    "type": "boolean"
                 },
                 "tax_rate": {
                     "type": "number",

@@ -468,6 +468,16 @@ definitions:
           trimmed value.
         maxLength: 255
         type: string
+      reminder_after_days:
+        maximum: 365
+        minimum: 0
+        type: integer
+      reminder_before_days:
+        maximum: 365
+        minimum: 0
+        type: integer
+      reminder_enabled:
+        type: boolean
       tax_rate:
         minimum: 0
         type: number
@@ -1507,6 +1517,68 @@ paths:
       security:
       - SessionCookie: []
       summary: update a client
+      tags:
+      - Clients
+  /clients/{id}/portal:
+    delete:
+      description: Revoke the public client portal link for a client.
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: ok
+          schema:
+            type: string
+      security:
+      - SessionCookie: []
+      summary: revoke client portal link
+      tags:
+      - Clients
+    patch:
+      description: Ensure the public client portal link for a client.
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - SessionCookie: []
+      summary: ensure client portal link
+      tags:
+      - Clients
+  /clients/{id}/portal/regenerate:
+    post:
+      description: Regenerate the public client portal link for a client.
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - SessionCookie: []
+      summary: regenerate client portal link
       tags:
       - Clients
   /config:
@@ -2789,6 +2861,51 @@ paths:
       summary: send payment link email
       tags:
       - Payments
+  /public/client/{token}:
+    get:
+      description: Get a public client portal.
+      parameters:
+      - description: Client portal token
+        in: path
+        name: token
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: get public client portal
+      tags:
+      - Public Client
+  /public/client/{token}/invoice/{id}:
+    get:
+      description: Get a public client invoice detail.
+      parameters:
+      - description: Client portal token
+        in: path
+        name: token
+        required: true
+        type: string
+      - description: Invoice ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      summary: get public client invoice
+      tags:
+      - Public Client
   /public/gateway/status:
     get:
       description: Get public payment gateway availability.

@@ -24,13 +24,12 @@ func PublicRoutesAt(a *fiber.App, prefix string) {
 	registerPublicAuthRoutes(route)
 
 	// Public payment pages (shared links, higher abuse potential).
-	publicPay := middleware.PublicPayLimiter()
-	route.Get("/public/pay/:token", publicPay, controllers.GetPublicPayment)
-	route.Post("/public/pay/:token/transaction", publicPay, middleware.Idempotency(middleware.PublicPayIdempotencyScope), controllers.CreatePublicTransaction)
-	route.Get("/public/pay/:token/status", publicPay, controllers.GetPublicPaymentStatus)
-	route.Get("/public/pay/:token/qr", publicPay, controllers.GetPublicQrImage)
-	route.Get("/public/gateway/config", publicPay, controllers.GatewayConfig)
-	route.Get("/public/gateway/status", publicPay, controllers.GatewayStatus)
+	registerPublicPayRoutes(route)
+
+	// Public client portal (one client's invoices + payment history via a
+	// shareable token); its own limiter namespace so a busy pay page cannot
+	// starve it.
+	registerPublicClientRoutes(route, middleware.PublicClientLimiter())
 
 	route.Get("/config", controllers.AppConfig) // public branding for the MPA
 

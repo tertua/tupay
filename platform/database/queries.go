@@ -11,6 +11,7 @@ type Queries struct {
 	*queries.UserIdentityQueries    // load queries from UserIdentity model (OIDC SSO)
 	*queries.ClientQueries          // load queries from Client model
 	*queries.InvoiceQueries         // load queries from Invoice model
+	*queries.ClientPortalQueries    // load queries for the public client portal
 	*queries.ItemQueries            // load queries from Item model
 	*queries.ExpenseQueries         // load queries from Expense model
 	*queries.PaymentQueries         // load queries from Payment model
@@ -35,6 +36,7 @@ func newQueries(db *gorm.DB) *Queries {
 		UserIdentityQueries:    &queries.UserIdentityQueries{DB: db},    // from UserIdentity model (OIDC SSO)
 		ClientQueries:          &queries.ClientQueries{DB: db},          // from Client model
 		InvoiceQueries:         &queries.InvoiceQueries{DB: db},         // from Invoice model
+		ClientPortalQueries:    &queries.ClientPortalQueries{DB: db},    // public client portal
 		ItemQueries:            &queries.ItemQueries{DB: db},            // from Item model
 		ExpenseQueries:         &queries.ExpenseQueries{DB: db},         // from Expense model
 		PaymentQueries:         &queries.PaymentQueries{DB: db},         // from Payment model

@@ -15,6 +15,7 @@ func autoMigrateList() []any {
 		&models.Expense{},
 		&models.Payment{},
 		&models.PaymentLink{},
+		&models.ClientLink{},
 		&models.GatewayProject{},
 		&models.GatewayTransaction{},
 		&models.GatewayEvent{},
