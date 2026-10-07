@@ -1,7 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Check, Loader2, Send, Undo2, Upload } from "lucide-react";
 import { toast } from "sonner";
-import { StatusBadge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { authApi } from "@/api/auth";
 import { invoiceApprovalApi } from "@/api/invoiceApproval";
@@ -18,7 +17,9 @@ export function InvoiceStatusActions({ invoice }) {
     staleTime: 60_000,
   });
   const isOwner = role === "owner";
-  const status = invoice?.effective_status;
+  // Stored status only: a sent invoice with a live gateway transaction also
+  // reads effective "pending" but must never offer approve/reject.
+  const status = invoice?.status;
 
   const act = useMutation({
     mutationFn: (job) => job.run(),
@@ -77,7 +78,6 @@ export function InvoiceStatusActions({ invoice }) {
 
   return (
     <div className="flex flex-wrap items-center gap-3 px-4 py-3 mb-4 rounded-2xl border border-[var(--border)] bg-[var(--surface)] shadow-card">
-      <StatusBadge status={status} />
       <span className="text-xs text-[var(--ink-muted)]">{hint}</span>
       <div className="flex items-center gap-2 md:ml-auto">
         {isLoading && <Loader2 size={14} className="animate-spin text-[var(--ink-muted)]" />}

@@ -132,7 +132,7 @@ export default function InvoiceEditor() {
         <Card padding="lg" className="text-center">
           <CardTitle className="mb-2">{isPending ? t("status.pending") : t("invDetail.paidLocked")}</CardTitle>
           <p className="text-sm text-[var(--ink-muted)] mb-5">
-            {isPending ? t("payments.onlineActive") : moneyPaid ? t("invDetail.paidLockedDesc") : t("invDetail.manuallyPaidDesc")}
+            {isPending ? (existing?.status === "pending" ? t("approval.pendingDesc") : t("payments.onlineActive")) : moneyPaid ? t("invDetail.paidLockedDesc") : t("invDetail.manuallyPaidDesc")}
           </p>
           <div className="flex items-center justify-center gap-2">
             <Button variant="outline" onClick={() => nav(`/invoices/${id}`)}>
