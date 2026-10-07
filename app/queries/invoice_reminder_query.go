@@ -49,7 +49,22 @@ func (q *InvoiceReminderQueries) DueInvoiceReminders(now time.Time, limit int) (
 // ClaimInvoiceReminder atomically claims one reminder leg by inserting its log
 // row. A unique (invoice_id, kind) violation means the leg was already sent
 // (by this worker or another replica) and reports (false, nil).
+//
+// The existence check below is a fast path, not the arbiter: a leg that is
+// already claimed is reported without executing — and failing — the unique
+// insert, so a permanently-due leg (the after-leg stays due forever once
+// overdue) does not produce a duplicate-key error on every sweep tick. The
+// insert keeps its role as the race arbiter across replicas.
 func (q *InvoiceReminderQueries) ClaimInvoiceReminder(orgID, invoiceID uuid.UUID, kind string, now time.Time) (bool, error) {
+	var already int64
+	if err := q.Model(&models.InvoiceReminderLog{}).
+		Where("invoice_id = ? AND kind = ?", invoiceID, kind).
+		Count(&already).Error; err != nil {
+		return false, err
+	}
+	if already > 0 {
+		return false, nil
+	}
 	return DoRetryValue(func() (bool, error) {
 		err := q.Create(&models.InvoiceReminderLog{
 			ID:        uuid.New(),

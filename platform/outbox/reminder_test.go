@@ -9,8 +9,10 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tertua/tupay/app/models"
+	"github.com/tertua/tupay/app/queries"
 	"github.com/tertua/tupay/pkg/utils"
 	"gorm.io/gorm"
+	gormlogger "gorm.io/gorm/logger"
 )
 
 // rawDB exposes the shared gorm handle behind the domain query methods
@@ -131,6 +133,45 @@ func TestReminderSweepClaimsLeg(t *testing.T) {
 
 	assert.Equal(t, int64(1), reminderLogCount(t, invoiceID, models.InvoiceReminderKindBefore))
 	assert.Equal(t, int64(1), mailCount(t, ownerUser.Email))
+}
+
+// errRecordingLogger captures GORM statement errors so a test can prove no
+// failing statement was executed at all. GORM reports failed SQL through
+// Trace(err), so that is the capture point.
+type errRecordingLogger struct{ errs []string }
+
+func (l *errRecordingLogger) LogMode(gormlogger.LogLevel) gormlogger.Interface { return l }
+func (l *errRecordingLogger) Info(context.Context, string, ...interface{})     {}
+func (l *errRecordingLogger) Warn(context.Context, string, ...interface{})     {}
+func (l *errRecordingLogger) Error(_ context.Context, msg string, _ ...interface{}) {
+	l.errs = append(l.errs, msg)
+}
+func (l *errRecordingLogger) Trace(_ context.Context, _ time.Time, _ func() (string, int64), err error) {
+	if err != nil {
+		l.errs = append(l.errs, err.Error())
+	}
+}
+
+// TestClaimSkipsDoomedInsert proves the pre-check path: once a leg is claimed,
+// re-claiming reports (false, nil) without executing — and failing — the
+// unique insert. Without the pre-check, a permanently-due after-leg would hit
+// the duplicate key on every 10s sweep tick and GORM would log it as an error.
+// The insert stays the cross-replica race arbiter (covered by
+// TestReminderSweepIdempotent and TestReminderTwoLegsSendSeparately).
+func TestClaimSkipsDoomedInsert(t *testing.T) {
+	orgID, _, invoiceID := seedReminderOrg(t, 7, nil)
+	now := time.Now()
+
+	claimed, err := testDB(t).ClaimInvoiceReminder(orgID, invoiceID, models.InvoiceReminderKindBefore, now)
+	require.NoError(t, err)
+	require.True(t, claimed)
+
+	rec := &errRecordingLogger{}
+	q := queries.InvoiceReminderQueries{DB: rawDB(t).Session(&gorm.Session{Logger: rec})}
+	claimed, err = q.ClaimInvoiceReminder(orgID, invoiceID, models.InvoiceReminderKindBefore, now)
+	require.NoError(t, err)
+	assert.False(t, claimed)
+	assert.Empty(t, rec.errs, "re-claim of an already-claimed leg must not run a failing statement")
 }
 
 // TestReminderSweepIdempotent verifies a second tick never re-reminds.
