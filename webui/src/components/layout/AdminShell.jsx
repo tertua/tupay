@@ -14,9 +14,9 @@ function AdminTab({ to, children }) {
       to={to}
       className={({ isActive }) =>
         cn(
-          "relative -mb-px border-b-2 px-3 py-4 text-sm font-medium whitespace-nowrap transition-colors duration-200",
+          "relative -mb-px border-b-[3px] px-3 py-4 text-sm font-medium whitespace-nowrap transition-colors duration-200",
           isActive
-            ? "border-[var(--accent)] text-[var(--ink)]"
+            ? "border-[var(--accent)] text-[var(--accent-strong)]"
             : "border-transparent text-[var(--ink-muted)] hover:border-[var(--border)] hover:text-[var(--ink)]",
         )
       }
