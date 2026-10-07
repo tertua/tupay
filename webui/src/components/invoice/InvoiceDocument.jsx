@@ -124,15 +124,9 @@ export function InvoiceDocument({ invoice, settings, lang = "en" }) {
               <Text style={[styles.label, { width: 70, textAlign: "right", marginRight: 10 }]}>{t(lang, "invDetail.issued")}</Text>
               <Text style={{ width: 90, textAlign: "right" }}>{formatDate(invoice.issue_date)}</Text>
             </View>
-            <View style={{ flexDirection: "row", marginBottom: 6 }}>
+            <View style={{ flexDirection: "row" }}>
               <Text style={[styles.label, { width: 70, textAlign: "right", marginRight: 10 }]}>{t(lang, "invDetail.due")}</Text>
               <Text style={{ width: 90, textAlign: "right" }}>{formatDate(invoice.due_date)}</Text>
-            </View>
-            <View style={{ flexDirection: "row" }}>
-              <Text style={[styles.label, { width: 70, textAlign: "right", marginRight: 10 }]}>{t(lang, "common.balance")}</Text>
-              <Text style={[styles.strong, { width: 90, textAlign: "right" }]}>
-                {formatMoney(invoice.total, currency)}
-              </Text>
             </View>
           </View>
         </View>
