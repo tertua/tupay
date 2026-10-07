@@ -34,4 +34,3 @@ func DefaultSettings(userID uuid.UUID) *Settings {
 	s.SettingsReminder = DefaultReminderSettings()
 	return s
 }
-

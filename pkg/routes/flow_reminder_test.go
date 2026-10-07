@@ -8,17 +8,22 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/tertua/tupay/app/models"
+	"github.com/tertua/tupay/pkg/utils"
 	"github.com/tertua/tupay/platform/database"
 	"github.com/tertua/tupay/platform/outbox"
 )
 
-// reminderInvoice builds a sent invoice due tomorrow, the tightest window the
-// default settings (7/3) will remind on.
+// reminderInvoice builds a sent invoice due in two days: strictly inside the
+// default 7-day before-window with margin on both sides. The due date is
+// derived from the local calendar date rather than "UTC now + 1d", which can
+// collapse onto today near UTC midnight (server zones ahead of UTC) and fire
+// neither leg — the test then fails only between 17:00 and 24:00 UTC.
 func reminderInvoice(clientID string) invoiceSpec {
+	today := utils.DateOnly(time.Now())
 	spec := newInvoice()
 	spec.ClientID = clientID
-	spec.Due = time.Now().UTC().AddDate(0, 0, 1).Format("2006-01-02")
-	spec.Issue = time.Now().UTC().Format("2006-01-02")
+	spec.Due = today.AddDate(0, 0, 2).Format("2006-01-02")
+	spec.Issue = today.Format("2006-01-02")
 	return spec
 }
 
