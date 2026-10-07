@@ -10,6 +10,11 @@ import { Checkbox } from "@/components/ui/Checkbox";
 export function PaymentMethodField({ value, disabled, onChange }) {
   const { t } = useLang();
   const online = value === "Online";
+  // Legacy rows may carry a method outside the editor's two states
+  // ("Bank transfer"); show the stored value raw — method names are never
+  // localized (see paymentMethods.js) — so it is never mistaken for Cash.
+  // Toggling overwrites it to Cash/Online only on user action.
+  const isLegacy = value && value !== "Online" && value !== "Cash";
   return (
     <div>
       <Checkbox
@@ -18,6 +23,11 @@ export function PaymentMethodField({ value, disabled, onChange }) {
         onChange={(v) => onChange(v ? "Online" : "Cash")}
         label={t("invEditor.onlinePayment")}
       />
+      {isLegacy && (
+        <p className="text-[11px] text-[var(--ink-muted)] mt-1.5">
+          {t("common.method")}: {value}
+        </p>
+      )}
       <p className="text-[11px] text-[var(--ink-muted)] mt-1.5">
         {t("invEditor.onlinePaymentHint")}
       </p>

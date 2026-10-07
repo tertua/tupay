@@ -257,7 +257,7 @@ export default function InvoiceEditor() {
                 <select
                   className={selectClass}
                   value={form.client_id}
-                  onChange={(e) => set({ client_id: e.target.value, payment_method: e.target.value ? form.payment_method : "" })}
+                  onChange={(e) => set({ client_id: e.target.value, payment_method: e.target.value ? form.payment_method : "Cash" })}
                 >
                   <option value="">{t("invEditor.noClient")}</option>
                   {(clients || []).map((c) => (
@@ -269,7 +269,7 @@ export default function InvoiceEditor() {
                 </select>
               </Field>
               <div className="sm:col-span-2">
-                <PaymentMethodField value={form.payment_method || ""} disabled={!form.client_id} onChange={(v) => set({ payment_method: v })} />
+                <PaymentMethodField value={form.payment_method || "Cash"} disabled={!form.client_id} onChange={(v) => set({ payment_method: v })} />
               </div>
               <Field label={t("invEditor.issueDate")}>
                 <Input

@@ -5,11 +5,14 @@ export function Checkbox({ checked, onChange, className, label, disabled }) {
   return (
     <button
       type="button"
-      role="checkbox" aria-checked={checked} disabled={disabled}
+      role="checkbox"
+      aria-checked={checked}
+      disabled={disabled}
       onClick={() => onChange(!checked)}
       className={cn(
         "inline-flex items-center gap-2 select-none rounded-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40",
-        disabled && "opacity-50 cursor-not-allowed", className
+        disabled && "opacity-50 cursor-not-allowed",
+        className
       )}
     >
       <span
@@ -22,9 +25,7 @@ export function Checkbox({ checked, onChange, className, label, disabled }) {
       >
         <Check size={11} strokeWidth={3} />
       </span>
-      {label && (
-        <span className="text-xs text-[var(--ink-muted)]">{label}</span>
-      )}
+      {label && <span className="text-xs text-[var(--ink-muted)]">{label}</span>}
     </button>
   );
 }
