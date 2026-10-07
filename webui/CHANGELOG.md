@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v2.4.2] - 2026-10-07
+
+### Changed
+- The invoice editor's payment method is now a single "Online payment"
+  checkbox (on = Online, off = Cash) instead of a three-way select. Only
+  "Online" changes behaviour, so a boolean no longer reads as a three-way
+  choice. New invoices default to Online; existing bank-transfer invoices
+  are unaffected, and RecordPaymentModal still offers all three methods.
+
+### Fixed
+- The payment reminder sweep no longer logs a duplicate-key error on every
+  poll for an already-claimed reminder leg: the claim checks for the existing
+  row first, while the unique insert stays as the race guard across replicas.
+
 ## [v2.4.1] - 2026-10-04
 
 ### Fixed
