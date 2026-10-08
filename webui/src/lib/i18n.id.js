@@ -2,7 +2,8 @@
 // Missing keys fall back to `en` at lookup time (see `i18n.js`).
 import { settingsId } from "./i18n.id.settings.js";
 import { gatewayId } from "./i18n.id.gateway.js";
-import { uiId } from "./i18n.id.ui.js"; import { templatesId } from "./i18n.id.templates.js";
+import { uiId } from "./i18n.id.ui.js";
+import { templatesId } from "./i18n.id.templates.js";
 export const id = {
     ...settingsId,
     ...uiId, ...templatesId,
@@ -61,7 +62,6 @@ export const id = {
     "ai.failed": "Provider AI gagal menyelesaikan permintaan. Silakan coba lagi.",
     "ai.rateLimited": "Layanan AI sedang sibuk (kuota gratis tercapai). Tunggu sebentar lalu coba lagi.",
     "invEditor.writeFailed": "Gagal menulis catatan ini",
-
     /* ============================ status ============================ */
     "status.draft": "Draf",
     "status.sent": "Terkirim",

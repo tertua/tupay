@@ -282,6 +282,6 @@
  "webui/src/pages/Reports.jsx": 129,
  "webui/src/pages/ResetPassword.jsx": 133,
  "webui/src/pages/Settings.jsx": 457,
- "webui/src/routes.jsx": 58,
+ "webui/src/routes.jsx": 35,
  "webui/vite.config.js": 49
 }
