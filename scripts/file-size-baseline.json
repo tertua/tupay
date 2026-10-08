@@ -5,7 +5,7 @@
  "app/controllers/audit_helper.go": 23,
  "app/controllers/auth_controller.go": 248,
  "app/controllers/cache_helper.go": 17,
- "app/controllers/client_controller.go": 277,
+ "app/controllers/client_controller.go": 236,
  "app/controllers/config_controller.go": 23,
  "app/controllers/dashboard_controller.go": 65,
  "app/controllers/expense_controller.go": 469,

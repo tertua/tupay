@@ -86,3 +86,53 @@ func setClientStatus(c fiber.Ctx, archived bool) error {
 	client.Status = target
 	return utils.OK(c, fiber.StatusOK, fiber.Map{"client": client})
 }
+
+// DeleteClient deletes a client, refusing while any open receivable (sent,
+// overdue, or pending) still exists so a client with unpaid invoices cannot be
+// lost. Drafts and paid invoices do not block.
+// @Description Delete a client.
+// @Summary delete a client
+// @Tags Clients
+// @Accept json
+// @Produce json
+// @Param id path string true "Client ID"
+// @Success 204 {string} status "ok"
+// @Failure 409 {object} map[string]interface{} "client has open invoices"
+// @Security SessionCookie
+// @Router /clients/{id} [delete]
+func DeleteClient(c fiber.Ctx) error {
+	orgID, err := utils.CurrentOrgID(c)
+	if err != nil {
+		return utils.Fail(c, fiber.StatusUnauthorized, "unauthorized, please sign in again", nil)
+	}
+
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return utils.Fail(c, fiber.StatusBadRequest, "invalid client id", nil)
+	}
+
+	db, ok := openDB(c)
+	if !ok {
+		return nil
+	}
+
+	if _, err := db.GetClient(orgID, id); err != nil {
+		return utils.NotFoundOrFailed(c, err, "client")
+	}
+
+	rows, err := db.ClientInvoices(orgID, id)
+	if err != nil {
+		return utils.Fail(c, fiber.StatusInternalServerError, "failed to load client invoices", nil)
+	}
+	if n := openInvoiceCount(rows, db.PendingInvoiceIDs(orgID)); n > 0 {
+		return utils.Fail(c, fiber.StatusConflict, "client has open invoices", fiber.Map{"open_invoices": n})
+	}
+
+	if err := db.DeleteClient(orgID, id); err != nil {
+		return utils.Fail(c, fiber.StatusInternalServerError, "failed to delete client", nil)
+	}
+	recordAudit(c, db, utils.CurrentActorID(c), "client.delete", "client", id.String(), "")
+	invalidateAggregates(c, orgID)
+
+	return c.SendStatus(fiber.StatusNoContent)
+}

@@ -5,6 +5,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
+	"github.com/tertua/tupay/app/models"
 )
 
 // TestClientListSearchSortFlow covers the server-side list contract: free-text
@@ -104,5 +105,45 @@ func TestClientStatusLifecycleFlow(t *testing.T) {
 	// Unknown client id is a 404, not a 500.
 	resp = doRequest(t, app, "PATCH", "/api/clients/00000000-0000-0000-0000-000000000000/archive", "{}", cookies)
 	assert.Equal(t, 404, resp.StatusCode)
+	resp.Body.Close()
+}
+
+// TestClientDeleteGuardFlow covers the delete guard: a client with a sent
+// invoice cannot be hard-deleted (409 + open_invoices), a draft-only client
+// deletes cleanly, and paying the invoice unblocks the delete.
+func TestClientDeleteGuardFlow(t *testing.T) {
+	app := newTestApp()
+	cookies := registerUser(t, app, "clientdelete@example.com", "secret123")
+
+	// A sent invoice blocks the delete.
+	clientID := createClient(t, app, cookies, "Acme")
+	spec := newInvoice()
+	spec.ClientID, spec.Status = clientID, models.InvoiceStatusSent
+	invoiceID := createInvoiceID(t, app, cookies, spec)
+
+	resp := doRequest(t, app, "DELETE", "/api/clients/"+clientID, "", cookies)
+	require.Equal(t, 409, resp.StatusCode)
+	errObj := decodeBody(t, resp)["error"].(map[string]interface{})
+	assert.Equal(t, "client has open invoices", errObj["message"])
+	assert.Equal(t, float64(1), errObj["details"].(map[string]interface{})["open_invoices"])
+
+	// Delete the invoice so the client is empty, then the delete succeeds.
+	resp = doRequest(t, app, "DELETE", "/api/invoices/"+invoiceID, "", cookies)
+	require.Equal(t, 204, resp.StatusCode)
+	resp.Body.Close()
+
+	// A draft-only client deletes cleanly.
+	draftClientID := createClient(t, app, cookies, "Draft Co")
+	draftSpec := newInvoice()
+	draftSpec.ClientID, draftSpec.Status = draftClientID, models.InvoiceStatusDraft
+	draftInvoiceID := createInvoiceID(t, app, cookies, draftSpec)
+
+	resp = doRequest(t, app, "DELETE", "/api/clients/"+draftClientID, "", cookies)
+	require.Equal(t, 204, resp.StatusCode)
+	resp.Body.Close()
+
+	// Cleanup: remove the draft invoice (its client is gone).
+	resp = doRequest(t, app, "DELETE", "/api/invoices/"+draftInvoiceID, "", cookies)
+	assert.Equal(t, 204, resp.StatusCode)
 	resp.Body.Close()
 }
