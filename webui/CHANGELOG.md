@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v2.5.0] - 2026-10-08
+
+### Added
+- Automatic recurring invoices: reusable templates with a weekly or monthly
+  cadence generate invoices on schedule through the background worker.
+  Generation is claim-guarded, so overlapping runs or restarts never produce
+  duplicates, and month-end dates clamp (Jan 31 → Feb 28/29). Manage them via
+  the new `/invoice-templates` API endpoints.
+
+### Fixed
+- The `Makefile` docker targets use `tupay-*` container and network names
+  instead of the leftover `template-*` prefix, matching the documented
+  `make docker.run` flow.
+
 ## [v2.4.2] - 2026-10-07
 
 ### Changed
