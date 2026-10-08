@@ -7,9 +7,9 @@ import { Input } from "@/components/ui/Input";
 import { useClients } from "@/hooks/useClients";
 import { useLang } from "@/context/LangContext";
 import {
-  useCreateInvoiceTemplate,
-  useUpdateInvoiceTemplate,
-} from "@/hooks/useInvoiceTemplates";
+  useCreateSubscription,
+  useUpdateSubscription,
+} from "@/hooks/useSubscriptions";
 import { todayDateInput, toDateInput, cn } from "@/lib/utils";
 
 const decimal = (value) => new Decimal(value || 0);
@@ -17,34 +17,34 @@ const blankItem = () => ({ description: "", quantity: 1, rate: 0 });
 const CADENCES = ["weekly", "monthly"];
 const INVOICE_STATUSES = ["draft", "sent"];
 
-// Create/edit form for a recurring invoice template. Kept presentational-plus-
-// one-mutation so InvoiceTemplates.jsx stays a thin list page (file-size split,
-// same shape as components/clients/ClientFormModal.jsx).
-export function InvoiceTemplateForm({ template, onDone, onCancel }) {
-  const isEdit = !!template;
+// Create/edit form for a subscription. Kept presentational-plus-one-mutation so
+// Subscriptions.jsx stays a thin list page (file-size split, same shape as
+// components/clients/ClientFormModal.jsx).
+export function SubscriptionForm({ subscription, onDone, onCancel }) {
+  const isEdit = !!subscription;
   const { t } = useLang();
   const { data: clients } = useClients();
-  const create = useCreateInvoiceTemplate();
-  const update = useUpdateInvoiceTemplate();
+  const create = useCreateSubscription();
+  const update = useUpdateSubscription();
   const [form, setForm] = useState(null);
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState("");
 
   useEffect(() => {
     setForm(
-      template
+      subscription
         ? {
-            name: template.name || "",
-            client_id: template.client_id || "",
-            cadence: template.cadence || "monthly",
-            invoice_status: template.invoice_status || "draft",
-            start_date: toDateInput(template.next_run_date) || "",
-            lead_days: template.lead_days ?? 0,
-            due_days: template.due_days ?? 30,
-            currency: template.currency || "IDR",
-            tax_rate: Number(template.tax_rate) || 0,
-            items: template.items?.length
-              ? template.items.map((it) => ({
+            name: subscription.name || "",
+            client_id: subscription.client_id || "",
+            cadence: subscription.cadence || "monthly",
+            invoice_status: subscription.invoice_status || "draft",
+            start_date: toDateInput(subscription.next_run_date) || "",
+            lead_days: subscription.lead_days ?? 0,
+            due_days: subscription.due_days ?? 30,
+            currency: subscription.currency || "IDR",
+            tax_rate: Number(subscription.tax_rate) || 0,
+            items: subscription.items?.length
+              ? subscription.items.map((it) => ({
                   description: it.description,
                   quantity: it.quantity,
                   rate: it.rate,
@@ -65,7 +65,7 @@ export function InvoiceTemplateForm({ template, onDone, onCancel }) {
           }
     );
     setErr("");
-  }, [template]);
+  }, [subscription]);
 
   if (!form) return null;
 
@@ -79,7 +79,7 @@ export function InvoiceTemplateForm({ template, onDone, onCancel }) {
   async function onSubmit(e) {
     e.preventDefault();
     if (!form.name.trim()) return setErr(t("common.name") + " — " + t("items.nameRequired"));
-    if (form.invoice_status === "sent" && !form.client_id) return setErr(t("templates.clientRequired"));
+    if (form.invoice_status === "sent" && !form.client_id) return setErr(t("subscriptions.clientRequired"));
     setSaving(true);
     setErr("");
     const payload = {
@@ -97,11 +97,11 @@ export function InvoiceTemplateForm({ template, onDone, onCancel }) {
         })),
     };
     try {
-      if (isEdit) await update.mutateAsync({ id: template.id, payload });
+      if (isEdit) await update.mutateAsync({ id: subscription.id, payload });
       else await create.mutateAsync(payload);
       onDone();
     } catch (ex) {
-      if (ex.status !== 401) setErr(ex.message || t("templates.saveFailed"));
+      if (ex.status !== 401) setErr(ex.message || t("subscriptions.saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -113,10 +113,10 @@ export function InvoiceTemplateForm({ template, onDone, onCancel }) {
   return (
     <form onSubmit={onSubmit}>
       <Card padding="lg">
-        <CardTitle className="mb-4">{isEdit ? t("templates.editTitle") : t("templates.newTitle")}</CardTitle>
+        <CardTitle className="mb-4">{isEdit ? t("subscriptions.editTitle") : t("subscriptions.newTitle")}</CardTitle>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <Field label={t("common.name")} className="sm:col-span-2">
-            <Input value={form.name} onChange={(e) => set({ name: e.target.value })} placeholder={t("templates.namePlaceholder")} />
+            <Input value={form.name} onChange={(e) => set({ name: e.target.value })} placeholder={t("subscriptions.namePlaceholder")} />
           </Field>
           <Field label={t("common.client")}>
             <select className={selectClass} value={form.client_id} onChange={(e) => set({ client_id: e.target.value })}>
@@ -129,27 +129,27 @@ export function InvoiceTemplateForm({ template, onDone, onCancel }) {
               ))}
             </select>
           </Field>
-          <Field label={t("templates.cadence")}>
+          <Field label={t("subscriptions.cadence")}>
             <select className={selectClass} value={form.cadence} onChange={(e) => set({ cadence: e.target.value })}>
               {CADENCES.map((c) => (
-                <option key={c} value={c}>{t(`templates.cadence.${c}`)}</option>
+                <option key={c} value={c}>{t(`subscriptions.cadence.${c}`)}</option>
               ))}
             </select>
           </Field>
-          <Field label={t("templates.startDate")}>
+          <Field label={t("subscriptions.startDate")}>
             <Input type="date" value={form.start_date} onChange={(e) => set({ start_date: e.target.value })} />
           </Field>
-          <Field label={t("templates.invoiceStatus")}>
+          <Field label={t("subscriptions.invoiceStatus")}>
             <select className={selectClass} value={form.invoice_status} onChange={(e) => set({ invoice_status: e.target.value })}>
               {INVOICE_STATUSES.map((s) => (
                 <option key={s} value={s}>{t(`status.${s}`)}</option>
               ))}
             </select>
           </Field>
-          <Field label={t("templates.leadDays")}>
+          <Field label={t("subscriptions.leadDays")}>
             <Input type="number" min="0" max="90" value={form.lead_days} onChange={(e) => set({ lead_days: e.target.value })} className="tabular" />
           </Field>
-          <Field label={t("templates.dueDays")}>
+          <Field label={t("subscriptions.dueDays")}>
             <Input type="number" min="0" max="365" value={form.due_days} onChange={(e) => set({ due_days: e.target.value })} className="tabular" />
           </Field>
         </div>

@@ -277,15 +277,26 @@ var migrations = []Migration{
 		Description: "recurring invoice templates + run ledger",
 		// Fresh additive tables: Down drops them in FK-safe order (ledger, then
 		// items, then headers); AutoMigrate recreates them on the next startup
-		// with this binary (forward upgrades run via AutoMigrate).
+		// with this binary (forward upgrades run via AutoMigrate). It addresses
+		// the pre-v25 table names because a rollback runs v25's Down (rename
+		// back to the template names) first.
 		Down: func(db *gorm.DB) error {
-			if err := db.Migrator().DropTable(&models.InvoiceTemplateRun{}); err != nil {
+			if err := db.Migrator().DropTable(&legacyInvoiceTemplateRun{}); err != nil {
 				return err
 			}
-			if err := db.Migrator().DropTable(&models.InvoiceTemplateItem{}); err != nil {
+			if err := db.Migrator().DropTable(&legacyInvoiceTemplateItem{}); err != nil {
 				return err
 			}
-			return db.Migrator().DropTable(&models.InvoiceTemplate{})
+			return db.Migrator().DropTable(&legacyInvoiceTemplate{})
 		},
+	},
+	{
+		Version:     25,
+		Description: "rename recurring invoice templates to subscriptions",
+		// Forward: renameSubscriptionTablesUp at startup, BEFORE AutoMigrate, so
+		// the renamed tables are never duplicated by newly-created empty ones.
+		// Down renames the three tables and the claim index back so a rollback
+		// to 24 leaves the schema the previous binary expects.
+		Down: renameSubscriptionTablesDown,
 	},
 }

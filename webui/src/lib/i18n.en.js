@@ -3,10 +3,10 @@
 import { settingsEn } from "./i18n.en.settings.js";
 import { gatewayEn } from "./i18n.en.gateway.js";
 import { uiEn } from "./i18n.en.ui.js";
-import { templatesEn } from "./i18n.en.templates.js";
+import { subscriptionsEn } from "./i18n.en.subscriptions.js";
 export const en = {
     ...settingsEn,
-    ...uiEn, ...templatesEn,
+    ...uiEn, ...subscriptionsEn,
     /* ============================ common ============================ */
     "app.tagline": "AI Invoice & Billing Manager",
     "common.loading": "Loading...",

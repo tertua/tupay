@@ -1,0 +1,32 @@
+// EN subscriptions namespace — split out of i18n.en.js (file-size ratchet).
+// Copy for the subscriptions page + its sidebar entry.
+export const subscriptionsEn = {
+    /* ============================ subscriptions ============================ */
+    "sidebar.subscriptions": "Subscriptions",
+    "subscriptions.title": "Subscriptions",
+    "subscriptions.desc": "Automate repeat invoices with a weekly or monthly schedule.",
+    "subscriptions.create": "New subscription",
+    "subscriptions.newTitle": "New subscription",
+    "subscriptions.editTitle": "Edit subscription",
+    "subscriptions.namePlaceholder": "e.g. Monthly retainer",
+    "subscriptions.cadence": "Cadence",
+    "subscriptions.cadence.weekly": "Weekly",
+    "subscriptions.cadence.monthly": "Monthly",
+    "subscriptions.startDate": "Start date",
+    "subscriptions.invoiceStatus": "Invoice status",
+    "subscriptions.leadDays": "Lead days",
+    "subscriptions.dueDays": "Due days",
+    "subscriptions.nextRun": "Next run",
+    "subscriptions.actions": "Actions",
+    "subscriptions.pause": "Pause",
+    "subscriptions.resume": "Resume",
+    "subscriptions.status.active": "Active",
+    "subscriptions.status.paused": "Paused",
+    "subscriptions.noneYet": "No subscriptions yet",
+    "subscriptions.createFirst": "Create a subscription to automate repeat invoices.",
+    "subscriptions.confirmDelete": "Delete subscription {name}? This cannot be undone.",
+    "subscriptions.clientRequired": "A client is required to send the generated invoice.",
+    "subscriptions.saveFailed": "Couldn't save subscription",
+    "subscriptions.statusFailed": "Couldn't change subscription status",
+    "subscriptions.deleteFailed": "Couldn't delete subscription",
+};

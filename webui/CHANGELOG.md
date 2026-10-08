@@ -13,8 +13,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Automatic recurring invoices: reusable templates with a weekly or monthly
   cadence generate invoices on schedule through the background worker.
   Generation is claim-guarded, so overlapping runs or restarts never produce
-  duplicates, and month-end dates clamp (Jan 31 → Feb 28/29). Manage them via
-  the new `/invoice-templates` API endpoints.
+  duplicates, and month-end dates clamp (Jan 31 → Feb 28/29).
+
+### Changed
+- The recurring-invoice feature is renamed to Subscriptions end to end. The API
+  endpoints moved from `/invoice-templates` to `/subscriptions` (JSON envelope
+  keys `invoice_template`/`invoice_templates` → `subscription`/`subscriptions`;
+  field names unchanged), the web UI route moved from `/templates` to
+  `/subscriptions`, and the database tables were renamed by schema migration 25
+  (`invoice_templates` → `subscriptions`, `invoice_template_items` →
+  `subscription_items`, `invoice_template_run` → `subscription_runs`).
 
 ### Fixed
 - The `Makefile` docker targets use `tupay-*` container and network names

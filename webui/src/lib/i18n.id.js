@@ -3,10 +3,10 @@
 import { settingsId } from "./i18n.id.settings.js";
 import { gatewayId } from "./i18n.id.gateway.js";
 import { uiId } from "./i18n.id.ui.js";
-import { templatesId } from "./i18n.id.templates.js";
+import { subscriptionsId } from "./i18n.id.subscriptions.js";
 export const id = {
     ...settingsId,
-    ...uiId, ...templatesId,
+    ...uiId, ...subscriptionsId,
     /* ============================ common ============================ */
     "app.tagline": "Manajer Faktur & Penagihan AI",
     "common.loading": "Memuat...",

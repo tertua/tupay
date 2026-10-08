@@ -38,7 +38,7 @@ func OpenDBConnection() (*Queries, error) {
 }
 
 // SchemaVersion is the current schema revision; bump it by 1 whenever a model changes so the version guard below can detect newer databases.
-const SchemaVersion = 24
+const SchemaVersion = 25
 
 // Migrate creates or updates tables from models, then enforces the forward-only version guard (newer DB than binary is fatal).
 func Migrate() error {
@@ -47,7 +47,7 @@ func Migrate() error {
 		return err
 	}
 
-	if err := db.AutoMigrate(autoMigrateList()...); err != nil {
+	if err := migrateSchema(db); err != nil {
 		return err
 	}
 

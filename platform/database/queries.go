@@ -23,8 +23,8 @@ type Queries struct {
 	*queries.MailOutboxQueries           // load queries for mail outbox
 	*queries.NotificationQueries         // load queries for notification webhooks
 	*queries.InvoiceReminderQueries      // load queries for automatic payment reminders
-	*queries.InvoiceTemplateQueries      // load queries for recurring invoice templates
-	*queries.InvoiceTemplateSweepQueries // scan + claim recurring template occurrences
+	*queries.SubscriptionQueries         // load queries for subscriptions
+	*queries.SubscriptionSweepQueries    // scan + claim subscription occurrences
 	*queries.AuditQueries                // load queries for audit trail
 	*queries.OrgQueries                  // load queries for organizations
 	*queries.MembershipQueries           // load queries for org memberships
@@ -50,8 +50,8 @@ func newQueries(db *gorm.DB) *Queries {
 		MailOutboxQueries:           &queries.MailOutboxQueries{DB: db},           // for mail outbox
 		NotificationQueries:         &queries.NotificationQueries{DB: db},         // for notification webhooks
 		InvoiceReminderQueries:      &queries.InvoiceReminderQueries{DB: db},      // for automatic payment reminders
-		InvoiceTemplateQueries:      &queries.InvoiceTemplateQueries{DB: db},      // for recurring invoice templates
-		InvoiceTemplateSweepQueries: &queries.InvoiceTemplateSweepQueries{DB: db}, // scan + claim recurring template occurrences
+		SubscriptionQueries:         &queries.SubscriptionQueries{DB: db},         // for subscriptions
+		SubscriptionSweepQueries:    &queries.SubscriptionSweepQueries{DB: db},    // scan + claim subscription occurrences
 		AuditQueries:                &queries.AuditQueries{DB: db},                // for audit trail
 		OrgQueries:                  &queries.OrgQueries{DB: db},                  // for organizations
 		MembershipQueries:           &queries.MembershipQueries{DB: db},           // for org memberships

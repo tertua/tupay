@@ -12,8 +12,8 @@ import (
 )
 
 // The item/subtotal/tax math lives in models (AddInvoiceItems /
-// ApplyInvoiceTotals) so the outbox recurring sweep shares one source of truth
-// without importing this package; buildInvoice is the HTTP-request wrapper.
+// ApplyInvoiceTotals) so the outbox subscription sweep shares one source of
+// truth without importing this package; buildInvoice is the HTTP-request wrapper.
 
 // buildInvoice computes invoice and item rows.
 func buildInvoice(orgID, userID uuid.UUID, input *models.InvoiceInput) (*models.Invoice, []models.InvoiceItem, error) {

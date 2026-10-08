@@ -46,12 +46,12 @@ export async function load(url, context, nextLoad) {
 register("data:text/javascript," + encodeURIComponent(nodeHook));
 
 const {
-  invoiceTemplatesKey,
-  invoiceTemplateKey,
-  useSetInvoiceTemplateStatus,
-  useDeleteInvoiceTemplate,
-} = await import("./useInvoiceTemplates.js");
-const { invoiceTemplatesApi } = await import("@/api/invoiceTemplates.js");
+  subscriptionsKey,
+  subscriptionKey,
+  useSetSubscriptionStatus,
+  useDeleteSubscription,
+} = await import("./useSubscriptions.js");
+const { subscriptionsApi } = await import("@/api/subscriptions.js");
 const { LangProvider } = await import("@/context/LangContext");
 const { en } = await import("@/lib/i18n.en.js");
 
@@ -67,16 +67,16 @@ function renderHook(client, useHook) {
   return captured;
 }
 
-test("invoiceTemplatesKey / invoiceTemplateKey keep their cache shape", () => {
-  assert.deepEqual(invoiceTemplatesKey(), ["invoice-templates", {}]);
-  assert.deepEqual(invoiceTemplateKey("t1"), ["invoice-template", "t1"]);
+test("subscriptionsKey / subscriptionKey keep their cache shape", () => {
+  assert.deepEqual(subscriptionsKey(), ["subscriptions", {}]);
+  assert.deepEqual(subscriptionKey("t1"), ["subscription", "t1"]);
 });
 
-test("useSetInvoiceTemplateStatus patches status and invalidates the list + detail", async () => {
+test("useSetSubscriptionStatus patches status and invalidates the list + detail", async () => {
   const qc = new QueryClient();
-  const original = invoiceTemplatesApi.setStatus;
+  const original = subscriptionsApi.setStatus;
   let received;
-  invoiceTemplatesApi.setStatus = async (id, status) => {
+  subscriptionsApi.setStatus = async (id, status) => {
     received = { id, status };
     return status;
   };
@@ -87,33 +87,33 @@ test("useSetInvoiceTemplateStatus patches status and invalidates the list + deta
       keys.push(args.queryKey);
       return spy(args);
     };
-    const m = renderHook(qc, useSetInvoiceTemplateStatus);
+    const m = renderHook(qc, useSetSubscriptionStatus);
     const data = await m.mutateAsync({ id: "t1", status: "paused" });
     assert.deepEqual(received, { id: "t1", status: "paused" });
     assert.equal(data, "paused");
-    assert.ok(keys.some((k) => k[0] === "invoice-templates"), "list invalidated");
-    assert.deepEqual(keys.find((k) => k[0] === "invoice-template"), ["invoice-template", "t1"]);
+    assert.ok(keys.some((k) => k[0] === "subscriptions"), "list invalidated");
+    assert.deepEqual(keys.find((k) => k[0] === "subscription"), ["subscription", "t1"]);
   } finally {
-    invoiceTemplatesApi.setStatus = original;
+    subscriptionsApi.setStatus = original;
   }
 });
 
-test("useDeleteInvoiceTemplate surfaces failures without swallowing them", async () => {
+test("useDeleteSubscription surfaces failures without swallowing them", async () => {
   const qc = new QueryClient();
-  const original = invoiceTemplatesApi.remove;
-  invoiceTemplatesApi.remove = async () => {
+  const original = subscriptionsApi.remove;
+  subscriptionsApi.remove = async () => {
     throw { status: 403, message: "forbidden" };
   };
   try {
-    const m = renderHook(qc, useDeleteInvoiceTemplate);
+    const m = renderHook(qc, useDeleteSubscription);
     await assert.rejects(() => m.mutateAsync("t1"));
   } finally {
-    invoiceTemplatesApi.remove = original;
+    subscriptionsApi.remove = original;
   }
 });
 
-test("toast copy exists for the new template keys", () => {
-  for (const key of ["templates.statusFailed", "templates.deleteFailed"]) {
+test("toast copy exists for the new subscription keys", () => {
+  for (const key of ["subscriptions.statusFailed", "subscriptions.deleteFailed"]) {
     assert.notEqual(en[key], undefined, key);
   }
 });

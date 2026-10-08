@@ -2,7 +2,7 @@ import { lazy } from "react";
 
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
 const Invoices = lazy(() => import("@/pages/Invoices"));
-const InvoiceTemplates = lazy(() => import("@/pages/InvoiceTemplates"));
+const Subscriptions = lazy(() => import("@/pages/Subscriptions"));
 const InvoiceEditor = lazy(() => import("@/pages/InvoiceEditor"));
 const InvoiceDetail = lazy(() => import("@/pages/InvoiceDetail"));
 const Clients = lazy(() => import("@/pages/Clients"));
@@ -18,7 +18,7 @@ const Settings = lazy(() => import("@/pages/Settings"));
 export const protectedChildren = [
   { path: "dashboard", element: <Dashboard /> },
   { path: "invoices", element: <Invoices /> },
-  { path: "templates", element: <InvoiceTemplates /> },
+  { path: "subscriptions", element: <Subscriptions /> },
   { path: "invoices/new", element: <InvoiceEditor /> },
   { path: "invoices/:id", element: <InvoiceDetail /> },
   { path: "invoices/:id/edit", element: <InvoiceEditor /> },

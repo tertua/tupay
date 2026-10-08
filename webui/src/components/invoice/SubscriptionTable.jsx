@@ -5,14 +5,14 @@ import { useClients } from "@/hooks/useClients";
 import { useLang } from "@/context/LangContext";
 import { formatDate } from "@/lib/utils";
 
-// Recurring-template list. Status uses a local badge mapping (active/paused)
+// Subscription list. Status uses a local badge mapping (active/paused)
 // rather than StatusBadge, which is keyed to invoice statuses.
-const TEMPLATE_STATUS = {
-  active: { tone: "success", labelKey: "templates.status.active" },
-  paused: { tone: "neutral", labelKey: "templates.status.paused" },
+const SUBSCRIPTION_STATUS = {
+  active: { tone: "success", labelKey: "subscriptions.status.active" },
+  paused: { tone: "neutral", labelKey: "subscriptions.status.paused" },
 };
 
-export function InvoiceTemplateTable({ templates, onEdit, onToggle, onDelete }) {
+export function SubscriptionTable({ subscriptions, onEdit, onToggle, onDelete }) {
   const { t } = useLang();
   const { data: clients } = useClients();
   const clientName = (id) => (clients || []).find((c) => c.id === id)?.name;
@@ -22,51 +22,51 @@ export function InvoiceTemplateTable({ templates, onEdit, onToggle, onDelete }) 
       <div className="hidden md:grid grid-cols-[1.6fr_1.4fr_1fr_1fr_1fr_auto] gap-4 px-5 py-3 border-b border-[var(--border)] text-[11px] uppercase tracking-wider text-[var(--ink-muted)] font-semibold">
         <span>{t("common.name")}</span>
         <span>{t("common.client")}</span>
-        <span>{t("templates.cadence")}</span>
-        <span>{t("templates.nextRun")}</span>
+        <span>{t("subscriptions.cadence")}</span>
+        <span>{t("subscriptions.nextRun")}</span>
         <span>{t("invoices.colStatus")}</span>
-        <span className="text-right">{t("templates.actions")}</span>
+        <span className="text-right">{t("subscriptions.actions")}</span>
       </div>
 
       <div className="divide-y divide-[var(--border)]">
-        {templates.map((tpl) => {
-          const active = tpl.status === "active";
-          const s = TEMPLATE_STATUS[tpl.status] || TEMPLATE_STATUS.paused;
+        {subscriptions.map((sub) => {
+          const active = sub.status === "active";
+          const s = SUBSCRIPTION_STATUS[sub.status] || SUBSCRIPTION_STATUS.paused;
           return (
             <div
-              key={tpl.id}
+              key={sub.id}
               className="grid grid-cols-2 md:grid-cols-[1.6fr_1.4fr_1fr_1fr_1fr_auto] gap-x-4 gap-y-1 px-5 py-4 items-center"
             >
-              <div className="font-semibold text-sm text-[var(--ink)] truncate">{tpl.name}</div>
+              <div className="font-semibold text-sm text-[var(--ink)] truncate">{sub.name}</div>
               <div className="text-sm text-[var(--ink)] truncate order-3 md:order-none col-span-2 md:col-span-1">
-                {clientName(tpl.client_id) || <span className="text-[var(--ink-muted)]">{t("common.noClient")}</span>}
+                {clientName(sub.client_id) || <span className="text-[var(--ink-muted)]">{t("common.noClient")}</span>}
               </div>
               <div className="hidden md:block text-sm text-[var(--ink-muted)]">
-                {t(`templates.cadence.${tpl.cadence}`)}
+                {t(`subscriptions.cadence.${sub.cadence}`)}
               </div>
               <div className="hidden md:block text-sm text-[var(--ink-muted)] tabular">
-                {tpl.next_run_date ? formatDate(tpl.next_run_date) : "—"}
+                {sub.next_run_date ? formatDate(sub.next_run_date) : "—"}
               </div>
               <div>
                 <Badge tone={s.tone}>{t(s.labelKey)}</Badge>
               </div>
               <div className="flex items-center justify-end gap-0.5">
                 <button type="button"
-                  onClick={() => onToggle(tpl)}
-                  title={active ? t("templates.pause") : t("templates.resume")}
+                  onClick={() => onToggle(sub)}
+                  title={active ? t("subscriptions.pause") : t("subscriptions.resume")}
                   className="h-7 w-7 rounded-full flex items-center justify-center text-[var(--ink-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)]"
                 >
                   {active ? <Pause size={13} /> : <Play size={13} />}
                 </button>
                 <button type="button"
-                  onClick={() => onEdit(tpl)}
+                  onClick={() => onEdit(sub)}
                   title={t("common.edit")}
                   className="h-7 w-7 rounded-full flex items-center justify-center text-[var(--ink-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)]"
                 >
                   <Pencil size={13} />
                 </button>
                 <button type="button"
-                  onClick={() => onDelete(tpl)}
+                  onClick={() => onDelete(sub)}
                   title={t("common.delete")}
                   className="h-7 w-7 rounded-full flex items-center justify-center text-[var(--ink-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--danger)]"
                 >

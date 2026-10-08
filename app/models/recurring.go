@@ -8,7 +8,7 @@ import (
 )
 
 // This file holds the invoice money arithmetic shared by every invoice build
-// path (the controller builder, the gateway relay, and the recurring-template
+// path (the controller builder, the gateway relay, and the subscription
 // sweep). It lives in models — imported by both controllers and
 // platform/outbox — so the outbox worker can build an invoice without pulling
 // in the HTTP layer, and so the single source of truth for money math is one

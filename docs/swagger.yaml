@@ -286,81 +286,6 @@ definitions:
     required:
     - status
     type: object
-  models.InvoiceTemplateInput:
-    properties:
-      cadence:
-        enum:
-        - weekly
-        - monthly
-        type: string
-      client_id:
-        type: string
-      currency:
-        maxLength: 3
-        type: string
-      discount:
-        type: number
-      due_days:
-        maximum: 365
-        minimum: 0
-        type: integer
-      invoice_status:
-        enum:
-        - draft
-        - sent
-        type: string
-      items:
-        items:
-          $ref: '#/definitions/models.InvoiceItemInput'
-        minItems: 1
-        type: array
-      lead_days:
-        maximum: 90
-        minimum: 0
-        type: integer
-      name:
-        maxLength: 120
-        type: string
-      notes:
-        type: string
-      payment_method:
-        description: PaymentMethod mirrors the Invoice column; see the comment there.
-        enum:
-        - Cash
-        - Bank transfer
-        - Online
-        maxLength: 32
-        type: string
-      start_date:
-        type: string
-      status:
-        enum:
-        - active
-        - paused
-        type: string
-      tax_rate:
-        minimum: 0
-        type: number
-      terms:
-        type: string
-    required:
-    - cadence
-    - currency
-    - invoice_status
-    - items
-    - name
-    - status
-    type: object
-  models.InvoiceTemplateStatusInput:
-    properties:
-      status:
-        enum:
-        - active
-        - paused
-        type: string
-    required:
-    - status
-    type: object
   models.ItemInput:
     properties:
       description:
@@ -569,6 +494,81 @@ definitions:
         - 0
         - 1
         type: integer
+    required:
+    - status
+    type: object
+  models.SubscriptionInput:
+    properties:
+      cadence:
+        enum:
+        - weekly
+        - monthly
+        type: string
+      client_id:
+        type: string
+      currency:
+        maxLength: 3
+        type: string
+      discount:
+        type: number
+      due_days:
+        maximum: 365
+        minimum: 0
+        type: integer
+      invoice_status:
+        enum:
+        - draft
+        - sent
+        type: string
+      items:
+        items:
+          $ref: '#/definitions/models.InvoiceItemInput'
+        minItems: 1
+        type: array
+      lead_days:
+        maximum: 90
+        minimum: 0
+        type: integer
+      name:
+        maxLength: 120
+        type: string
+      notes:
+        type: string
+      payment_method:
+        description: PaymentMethod mirrors the Invoice column; see the comment there.
+        enum:
+        - Cash
+        - Bank transfer
+        - Online
+        maxLength: 32
+        type: string
+      start_date:
+        type: string
+      status:
+        enum:
+        - active
+        - paused
+        type: string
+      tax_rate:
+        minimum: 0
+        type: number
+      terms:
+        type: string
+    required:
+    - cadence
+    - currency
+    - invoice_status
+    - items
+    - name
+    - status
+    type: object
+  models.SubscriptionStatusInput:
+    properties:
+      status:
+        enum:
+        - active
+        - paused
+        type: string
     required:
     - status
     type: object
@@ -2044,156 +2044,6 @@ paths:
       summary: liveness probe
       tags:
       - Health
-  /invoice-templates:
-    get:
-      description: Get recurring invoice templates of current org.
-      parameters:
-      - description: Page number (default 1)
-        in: query
-        name: page
-        type: integer
-      - description: Items per page (default 20, max 100)
-        in: query
-        name: per_page
-        type: integer
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - SessionCookie: []
-      summary: list invoice templates
-      tags:
-      - InvoiceTemplates
-    post:
-      consumes:
-      - application/json
-      description: Create a recurring invoice template.
-      parameters:
-      - description: Invoice template payload
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/models.InvoiceTemplateInput'
-      produces:
-      - application/json
-      responses:
-        "201":
-          description: Created
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - SessionCookie: []
-      summary: create invoice template
-      tags:
-      - InvoiceTemplates
-  /invoice-templates/{id}:
-    delete:
-      description: Delete a recurring invoice template.
-      parameters:
-      - description: Invoice template ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "204":
-          description: ok
-          schema:
-            type: string
-      security:
-      - SessionCookie: []
-      summary: delete invoice template
-      tags:
-      - InvoiceTemplates
-    get:
-      description: Get a recurring invoice template by ID.
-      parameters:
-      - description: Invoice template ID
-        in: path
-        name: id
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - SessionCookie: []
-      summary: get invoice template
-      tags:
-      - InvoiceTemplates
-    patch:
-      consumes:
-      - application/json
-      description: Update a recurring invoice template.
-      parameters:
-      - description: Invoice template ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Invoice template payload
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/models.InvoiceTemplateInput'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - SessionCookie: []
-      summary: update invoice template
-      tags:
-      - InvoiceTemplates
-  /invoice-templates/{id}/status:
-    patch:
-      consumes:
-      - application/json
-      description: Update a recurring invoice template's status.
-      parameters:
-      - description: Invoice template ID
-        in: path
-        name: id
-        required: true
-        type: string
-      - description: Status payload
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/models.InvoiceTemplateStatusInput'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - SessionCookie: []
-      summary: update invoice template status
-      tags:
-      - InvoiceTemplates
   /invoices:
     get:
       consumes:
@@ -3355,6 +3205,156 @@ paths:
       summary: list payment methods
       tags:
       - Settings
+  /subscriptions:
+    get:
+      description: Get subscriptions of current org.
+      parameters:
+      - description: Page number (default 1)
+        in: query
+        name: page
+        type: integer
+      - description: Items per page (default 20, max 100)
+        in: query
+        name: per_page
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - SessionCookie: []
+      summary: list subscriptions
+      tags:
+      - Subscriptions
+    post:
+      consumes:
+      - application/json
+      description: Create a subscription.
+      parameters:
+      - description: Subscription payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.SubscriptionInput'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - SessionCookie: []
+      summary: create subscription
+      tags:
+      - Subscriptions
+  /subscriptions/{id}:
+    delete:
+      description: Delete a subscription.
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: ok
+          schema:
+            type: string
+      security:
+      - SessionCookie: []
+      summary: delete subscription
+      tags:
+      - Subscriptions
+    get:
+      description: Get a subscription by ID.
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - SessionCookie: []
+      summary: get subscription
+      tags:
+      - Subscriptions
+    patch:
+      consumes:
+      - application/json
+      description: Update a subscription.
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Subscription payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.SubscriptionInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - SessionCookie: []
+      summary: update subscription
+      tags:
+      - Subscriptions
+  /subscriptions/{id}/status:
+    patch:
+      consumes:
+      - application/json
+      description: Update a subscription's status.
+      parameters:
+      - description: Subscription ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Status payload
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.SubscriptionStatusInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - SessionCookie: []
+      summary: update subscription status
+      tags:
+      - Subscriptions
   /webhooks/{gateway}:
     post:
       consumes:
