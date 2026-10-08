@@ -179,3 +179,48 @@ func TestClientOverdueViewFlow(t *testing.T) {
 	assert.Equal(t, "overdue", filtered["invoices"].([]interface{})[0].(map[string]interface{})["effective_status"])
 	assert.Equal(t, float64(2), filtered["stats"].(map[string]interface{})["count"])
 }
+
+// TestClientReminderFlow covers the manual reminder action: an open invoice
+// queues one reminder (202 + queued=1), a second call is idempotent (queued=0,
+// skipped=1 via the manual claim), a client with only a paid invoice queues
+// nothing, and an unknown client is a 404.
+func TestClientReminderFlow(t *testing.T) {
+	app := newTestApp()
+	cookies := registerUser(t, app, "clientreminder@example.com", "secret123")
+
+	clientID := createClient(t, app, cookies, "Acme")
+	spec := newInvoice()
+	spec.ClientID, spec.Status = clientID, models.InvoiceStatusSent
+	createInvoiceID(t, app, cookies, spec)
+
+	// First reminder: one open invoice queued.
+	resp := doRequest(t, app, "POST", "/api/clients/"+clientID+"/reminder", "{}", cookies)
+	require.Equal(t, 202, resp.StatusCode)
+	body := decodeBody(t, resp)
+	assert.Equal(t, float64(1), body["queued"])
+	assert.Equal(t, float64(0), body["skipped"])
+
+	// Second call is idempotent: the manual leg was already claimed.
+	resp = doRequest(t, app, "POST", "/api/clients/"+clientID+"/reminder", "{}", cookies)
+	require.Equal(t, 202, resp.StatusCode)
+	body = decodeBody(t, resp)
+	assert.Equal(t, float64(0), body["queued"])
+	assert.Equal(t, float64(1), body["skipped"])
+
+	// A paid-only client has no open receivables to remind about.
+	paidClientID := createClient(t, app, cookies, "Paid Co")
+	paidSpec := newInvoice()
+	paidSpec.ClientID, paidSpec.Status = paidClientID, models.InvoiceStatusPaid
+	createInvoiceID(t, app, cookies, paidSpec)
+
+	resp = doRequest(t, app, "POST", "/api/clients/"+paidClientID+"/reminder", "{}", cookies)
+	require.Equal(t, 202, resp.StatusCode)
+	body = decodeBody(t, resp)
+	assert.Equal(t, float64(0), body["queued"])
+	assert.Equal(t, float64(0), body["skipped"])
+
+	// Unknown client id is a stable 404.
+	resp = doRequest(t, app, "POST", "/api/clients/00000000-0000-0000-0000-000000000000/reminder", "{}", cookies)
+	assert.Equal(t, 404, resp.StatusCode)
+	resp.Body.Close()
+}

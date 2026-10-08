@@ -12,6 +12,10 @@ import (
 const (
 	InvoiceReminderKindBefore = "before" // sent before_days ahead of due date
 	InvoiceReminderKindAfter  = "after"  // sent after_days past the due date
+	// InvoiceReminderKindManual is a one-off, user-triggered reminder. It uses
+	// its own leg so it can never satisfy (and thus suppress) the automatic
+	// before/after legs' unique index.
+	InvoiceReminderKindManual = "manual"
 )
 
 // NotifEventInvoiceReminder is the user-notification/SSE event type published

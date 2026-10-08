@@ -14,9 +14,9 @@ func registerPublicClientRoutes(route fiber.Router, limiter fiber.Handler) {
 }
 
 // registerClientRoutes wires the tenant's client CRUD, the owner-only
-// client-portal link lifecycle, and the owner-only archive lifecycle onto the
-// private session group. Split out of private_routes.go so the router index
-// stays within its size ratchet.
+// client-portal link lifecycle, the owner-only archive lifecycle, and the
+// member-level receivables reminder onto the private session group. Split out
+// of private_routes.go so the router index stays within its size ratchet.
 func registerClientRoutes(route fiber.Router) {
 	route.Get("/clients", controllers.ListClients)         // get all clients
 	route.Post("/clients", controllers.CreateClient)       // create a new client
@@ -29,6 +29,10 @@ func registerClientRoutes(route fiber.Router) {
 	// the CRUD lines so the generic routes stay grouped.
 	route.Patch("/clients/:id/archive", middleware.RequireOrgRole("owner"), controllers.ArchiveClient)
 	route.Patch("/clients/:id/unarchive", middleware.RequireOrgRole("owner"), controllers.UnarchiveClient)
+
+	// One-off receivables reminder: queues a manual reminder leg per open
+	// invoice; idempotent via the (invoice, manual) claim.
+	route.Post("/clients/:id/reminder", controllers.SendClientReminder)
 
 	// Owner-only portal link lifecycle: PATCH ensures/mints, POST regenerates,
 	// DELETE revokes. RequireOrgRole("owner") gates every mutation.

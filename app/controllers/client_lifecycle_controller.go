@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/tertua/tupay/app/models"
 	"github.com/tertua/tupay/pkg/utils"
+	"github.com/tertua/tupay/platform/outbox"
 )
 
 // ArchiveClient marks a client as archived. Owner-only at the route level;
@@ -135,4 +136,59 @@ func DeleteClient(c fiber.Ctx) error {
 	invalidateAggregates(c, orgID)
 
 	return c.SendStatus(fiber.StatusNoContent)
+}
+
+// SendClientReminder queues a one-off payment reminder for every open invoice of
+// a client, reusing the scheduled sweep's render/enqueue/event path. Each
+// (invoice, manual) leg is claimed before sending, so a double-click is
+// idempotent and the scheduled before/after legs are left untouched.
+// @Description Send a payment reminder for a client's open invoices.
+// @Summary send a client reminder
+// @Tags Clients
+// @Accept json
+// @Produce json
+// @Param id path string true "Client ID"
+// @Success 202 {object} map[string]interface{}
+// @Security SessionCookie
+// @Router /clients/{id}/reminder [post]
+func SendClientReminder(c fiber.Ctx) error {
+	orgID, err := utils.CurrentOrgID(c)
+	if err != nil {
+		return utils.Fail(c, fiber.StatusUnauthorized, "unauthorized, please sign in again", nil)
+	}
+
+	id, err := uuid.Parse(c.Params("id"))
+	if err != nil {
+		return utils.Fail(c, fiber.StatusBadRequest, "invalid client id", nil)
+	}
+
+	db, ok := openDB(c)
+	if !ok {
+		return nil
+	}
+
+	if _, err := db.GetClient(orgID, id); err != nil {
+		return utils.NotFoundOrFailed(c, err, "client")
+	}
+
+	rows, err := db.ClientOpenInvoiceReminderRows(orgID, id)
+	if err != nil {
+		return utils.Fail(c, fiber.StatusInternalServerError, "failed to load client invoices", nil)
+	}
+
+	queued, skipped := 0, 0
+	for _, row := range rows {
+		sent, err := outbox.EnqueueInvoiceReminder(orgID, row, models.InvoiceReminderKindManual)
+		if err != nil {
+			return utils.Fail(c, fiber.StatusInternalServerError, "failed to queue reminder", nil)
+		}
+		if sent {
+			queued++
+		} else {
+			skipped++
+		}
+	}
+
+	recordAudit(c, db, utils.CurrentActorID(c), "client.reminder", "client", id.String(), "")
+	return utils.OK(c, fiber.StatusAccepted, fiber.Map{"queued": queued, "skipped": skipped})
 }

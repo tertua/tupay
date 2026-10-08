@@ -82,15 +82,32 @@ func (w *Worker) remindOne(ctx context.Context, db *database.Queries, row models
 	if !claimed {
 		return
 	}
-	w.sendReminderMail(db, row, kind)
-	w.publishReminderEvent(db, row, kind)
+	manual := manualRow(row)
+	sendReminderMail(db, manual, kind)
+	publishReminderEvent(db, manual, kind)
 	logger.L().Info("outbox reminder sent", "invoice_id", row.InvoiceID.String(), "kind", kind)
+}
+
+// manualRow narrows a scheduled scan row to the fields the shared reminder
+// copy/event path needs, so the sweep and the manual endpoint share one shape.
+func manualRow(row models.ReminderScanRow) models.ClientReminderRow {
+	return models.ClientReminderRow{
+		InvoiceID:     row.InvoiceID,
+		OrgID:         row.OrgID,
+		InvoiceNumber: row.InvoiceNumber,
+		Currency:      row.Currency,
+		Total:         row.Total,
+		DueDate:       row.DueDate,
+		BillingEmail:  row.BillingEmail,
+		Language:      row.Language,
+	}
 }
 
 // sendReminderMail renders and queues the reminder email for one claimed leg.
 // The recipient is the org billing email, falling back to the owner's email
-// when the org has none configured.
-func (w *Worker) sendReminderMail(db *database.Queries, row models.ReminderScanRow, kind string) {
+// when the org has none configured. It is shared by the scheduled sweep and
+// the manual endpoint (see reminder_manual.go).
+func sendReminderMail(db *database.Queries, row models.ClientReminderRow, kind string) {
 	to := row.BillingEmail
 	if to == "" {
 		to = ownerEmail(db, row.OrgID)
@@ -107,7 +124,7 @@ func (w *Worker) sendReminderMail(db *database.Queries, row models.ReminderScanR
 
 // reminderCopy builds the reminder subject and rendered HTML body for a leg,
 // using the invoice's public pay link when one exists.
-func reminderCopy(row models.ReminderScanRow, kind string) (string, string) {
+func reminderCopy(row models.ClientReminderRow, kind string) (string, string) {
 	subject := "Payment reminder for invoice " + row.InvoiceNumber
 	if kind == models.InvoiceReminderKindAfter {
 		subject = "Overdue: invoice " + row.InvoiceNumber
@@ -130,7 +147,7 @@ func reminderCopy(row models.ReminderScanRow, kind string) (string, string) {
 
 // invoicePayURL returns the invoice's public pay link (minted earlier by the
 // controller path) or the app root when the invoice has no link yet.
-func invoicePayURL(row models.ReminderScanRow) string {
+func invoicePayURL(row models.ClientReminderRow) string {
 	base := configs.Get().Mail.AppPublicURL
 	link, err := payLinkToken(row)
 	if err != nil || link == "" {
@@ -140,7 +157,7 @@ func invoicePayURL(row models.ReminderScanRow) string {
 }
 
 // payLinkToken loads the invoice's public payment link token, if any.
-func payLinkToken(row models.ReminderScanRow) (string, error) {
+func payLinkToken(row models.ClientReminderRow) (string, error) {
 	db, err := database.OpenDBConnection()
 	if err != nil {
 		return "", err
@@ -174,7 +191,7 @@ func ownerEmail(db *database.Queries, orgID uuid.UUID) string {
 // publishReminderEvent nudges the live SSE stream and the org's webhook
 // endpoints for one claimed leg; it reuses the same per-user path as
 // enqueueNotification so the bell and n8n consumers stay in sync.
-func (w *Worker) publishReminderEvent(db *database.Queries, row models.ReminderScanRow, kind string) {
+func publishReminderEvent(db *database.Queries, row models.ClientReminderRow, kind string) {
 	members, err := db.ListByOrg(row.OrgID)
 	if err != nil || len(members) == 0 {
 		return
@@ -192,7 +209,7 @@ func (w *Worker) publishReminderEvent(db *database.Queries, row models.ReminderS
 
 // enqueueReminderDelivery queues one reminder event for every subscribed
 // endpoint of a member, sharing the payload event_id per member.
-func enqueueReminderDelivery(db *database.Queries, userID uuid.UUID, endpoints []models.NotificationEndpoint, row models.ReminderScanRow, kind, eventID string) {
+func enqueueReminderDelivery(db *database.Queries, userID uuid.UUID, endpoints []models.NotificationEndpoint, row models.ClientReminderRow, kind, eventID string) {
 	payload := reminderPayload(row, kind)
 	for _, e := range endpoints {
 		if err := db.EnqueueDelivery(&models.NotificationDelivery{
@@ -209,7 +226,7 @@ func enqueueReminderDelivery(db *database.Queries, userID uuid.UUID, endpoints [
 }
 
 // reminderPayload is the stable v1 webhook envelope for a reminder event.
-func reminderPayload(row models.ReminderScanRow, kind string) string {
+func reminderPayload(row models.ClientReminderRow, kind string) string {
 	amount := row.Total.String()
 	isAfter := kind == models.InvoiceReminderKindAfter
 	overdue := "false"
