@@ -9,6 +9,7 @@ import { id } from "./i18n.id.js";
 import { uiId } from "./i18n.id.ui.js";
 import { settingsId } from "./i18n.id.settings.js";
 import { gatewayId } from "./i18n.id.gateway.js";
+import { clientsId } from "./i18n.id.clients.js";
 
 const LITERAL_TRANSLATIONS = ["Pemindaian", "Dasbor", "Gerbang"];
 
@@ -24,7 +25,7 @@ function collectStrings(node, out = []) {
 }
 
 test("ID copy has no literal translate-tool wording", () => {
-  const strings = [id, uiId, settingsId, gatewayId].flatMap((dict) => collectStrings(dict));
+  const strings = [id, uiId, settingsId, gatewayId, clientsId].flatMap((dict) => collectStrings(dict));
   assert.ok(strings.length > 0, "expected the ID dictionaries to yield strings");
 
   const hits = [];

@@ -4,9 +4,10 @@ import { settingsId } from "./i18n.id.settings.js";
 import { gatewayId } from "./i18n.id.gateway.js";
 import { uiId } from "./i18n.id.ui.js";
 import { subscriptionsId } from "./i18n.id.subscriptions.js";
+import { clientsId } from "./i18n.id.clients.js";
 export const id = {
     ...settingsId,
-    ...uiId, ...subscriptionsId,
+    ...uiId, ...subscriptionsId, ...clientsId,
     /* ============================ common ============================ */
     "app.tagline": "Manajer Faktur & Penagihan AI",
     "common.loading": "Memuat...",
@@ -54,6 +55,9 @@ export const id = {
     "common.currency": "Mata uang",
     "common.loadFailed": "Gagal memuat halaman ini",
     "common.retry": "Coba lagi",
+    "common.prev": "Sebelumnya",
+    "common.next": "Berikutnya",
+    "common.pageOf": "Halaman {page} dari {total}",
     "common.back": "Kembali",
     "common.validEmail": "Masukkan alamat email yang valid",
     "common.addressPlaceholder": "Alamat Lengkap",
@@ -434,44 +438,6 @@ export const id = {
     "invEditor.taxPct": "Pajak %",
     "invEditor.discountSymbol": "Diskon ({symbol})",
     "invEditor.taxLine": "Pajak ({n}%)",
-
-    /* ============================ clients ============================ */
-    "clients.title": "Klien",
-    "clients.desc": "Semua yang Anda tagih, dengan totalnya sekilas.",
-    "clients.notesPlaceholder": "Sesuatu yang perlu diingat...",
-    "clients.namePlaceholder": "Nama klien",
-    "clients.emailPlaceholder": "klien@contoh.com",
-    "clients.companyPlaceholder": "Nama perusahaan",
-    "clients.add": "Tambah Klien",
-    "clients.searchPlaceholder": "Cari klien...",
-    "clients.noMatching": "Tidak ada klien yang cocok",
-    "clients.tryDifferent": "Coba pencarian lain.",
-    "clients.noneYet": "Belum ada klien",
-    "clients.addFirst": "Tambah klien pertama Anda untuk mulai menagih.",
-    "clients.editTitle": "Edit klien",
-    "clients.addTitle": "Tambah klien",
-
-    /* ============================ client detail ============================ */
-    "clientDetail.notFound": "Klien tidak ditemukan",
-    "clientDetail.deleted": "Mungkin sudah dihapus.",
-    "clientDetail.confirmDelete": "Hapus {name}? Fakturnya akan tetap disimpan namun tidak tertaut.",
-    "clientDetail.newInvoice": "Faktur Baru",
-    "clientDetail.invoices": "Faktur",
-    "clientDetail.contact": "Kontak",
-    "clientDetail.invoiceHistory": "Riwayat faktur",
-    "clientDetail.noInvoices": "Belum ada faktur untuk klien ini.",
-    "clientDetail.createOne": "Buat satu",
-    "clientDetail.issuedDue": "Terbit {issued} · Jatuh tempo {due}",
-    "clientDetail.paymentStatus": "Status pembayaran",
-    "clientDetail.paid": "lunas",
-    "clientDetail.nothingBilled": "Belum ada tagihan.",
-    "clientDetail.avgInvoice": "Rata-rata faktur",
-    "clientDetail.largest": "Terbesar",
-    "clientDetail.billingOverTime": "Penagihan dari waktu ke waktu",
-    "clientDetail.noBillingActivity": "Tidak ada aktivitas penagihan dalam 6 bulan terakhir.",
-    "clientDetail.statusPaid": "Lunas",
-    "clientDetail.statusOpen": "Terbuka",
-    "clientDetail.statusOverdue": "Jatuh Tempo",
 
     /* ============================ items ============================ */
     "items.title": "Item & Layanan",

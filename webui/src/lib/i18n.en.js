@@ -4,9 +4,10 @@ import { settingsEn } from "./i18n.en.settings.js";
 import { gatewayEn } from "./i18n.en.gateway.js";
 import { uiEn } from "./i18n.en.ui.js";
 import { subscriptionsEn } from "./i18n.en.subscriptions.js";
+import { clientsEn } from "./i18n.en.clients.js";
 export const en = {
     ...settingsEn,
-    ...uiEn, ...subscriptionsEn,
+    ...uiEn, ...subscriptionsEn, ...clientsEn,
     /* ============================ common ============================ */
     "app.tagline": "AI Invoice & Billing Manager",
     "common.loading": "Loading...",
@@ -54,6 +55,9 @@ export const en = {
     "common.currency": "Currency",
     "common.loadFailed": "Couldn't load this page",
     "common.retry": "Try again",
+    "common.prev": "Previous",
+    "common.next": "Next",
+    "common.pageOf": "Page {page} of {total}",
     "common.back": "Back",
     "common.validEmail": "Enter a valid email address",
     "common.addressPlaceholder": "Alamat Lengkap",
@@ -434,44 +438,6 @@ export const en = {
     "invEditor.taxPct": "Tax %",
     "invEditor.discountSymbol": "Discount ({symbol})",
     "invEditor.taxLine": "Tax ({n}%)",
-
-    /* ============================ clients ============================ */
-    "clients.title": "Clients",
-    "clients.desc": "Everyone you bill, with their totals at a glance.",
-    "clients.notesPlaceholder": "Anything worth remembering...",
-    "clients.namePlaceholder": "Client name",
-    "clients.emailPlaceholder": "client@example.com",
-    "clients.companyPlaceholder": "Company name",
-    "clients.add": "Add Client",
-    "clients.searchPlaceholder": "Search clients...",
-    "clients.noMatching": "No matching clients",
-    "clients.tryDifferent": "Try a different search.",
-    "clients.noneYet": "No clients yet",
-    "clients.addFirst": "Add your first client to start invoicing them.",
-    "clients.editTitle": "Edit client",
-    "clients.addTitle": "Add client",
-
-    /* ============================ client detail ============================ */
-    "clientDetail.notFound": "Client not found",
-    "clientDetail.deleted": "It may have been deleted.",
-    "clientDetail.confirmDelete": "Delete {name}? Their invoices will be kept but unlinked.",
-    "clientDetail.newInvoice": "New Invoice",
-    "clientDetail.invoices": "Invoices",
-    "clientDetail.contact": "Contact",
-    "clientDetail.invoiceHistory": "Invoice history",
-    "clientDetail.noInvoices": "No invoices for this client yet.",
-    "clientDetail.createOne": "Create one",
-    "clientDetail.issuedDue": "Issued {issued} · Due {due}",
-    "clientDetail.paymentStatus": "Payment status",
-    "clientDetail.paid": "paid",
-    "clientDetail.nothingBilled": "Nothing billed yet.",
-    "clientDetail.avgInvoice": "Avg invoice",
-    "clientDetail.largest": "Largest",
-    "clientDetail.billingOverTime": "Billing over time",
-    "clientDetail.noBillingActivity": "No billing activity in the last 6 months.",
-    "clientDetail.statusPaid": "Paid",
-    "clientDetail.statusOpen": "Open",
-    "clientDetail.statusOverdue": "Overdue",
 
     /* ============================ items ============================ */
     "items.title": "Items & Services",

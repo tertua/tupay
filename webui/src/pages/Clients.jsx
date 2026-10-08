@@ -1,35 +1,57 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { Plus, Search, ArrowRight } from "lucide-react";
+import { Plus } from "lucide-react";
 import { PageHeader } from "@/components/layout/PageHeader";
-import { Card } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
-import { SearchInput } from "@/components/ui/Input";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ClientsIllo } from "@/components/ui/EmptyIllustrations";
 import { Skeleton } from "@/components/ui/Skeleton";
 import { QueryError } from "@/components/ui/QueryError";
+import { Paginator } from "@/components/ui/Pagination";
 import { ClientFormModal } from "@/components/clients/ClientFormModal";
+import { ClientCard } from "@/components/clients/ClientCard";
+import { ClientsToolbar } from "@/components/clients/ClientsToolbar";
 import { useClients } from "@/hooks/useClients";
 import { useLang } from "@/context/LangContext";
-import { formatMoney } from "@/lib/utils";
+
+// Debounce the search box so typing does not fire a request per keystroke.
+function useDebounced(value, delay = 300) {
+  const [debounced, setDebounced] = useState(value);
+  useEffect(() => {
+    const id = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(id);
+  }, [value, delay]);
+  return debounced;
+}
 
 export default function Clients() {
   const nav = useNavigate();
   const { t } = useLang();
-  const { data, isLoading, error } = useClients();
   const [search, setSearch] = useState("");
+  const [status, setStatus] = useState("");
+  const [sort, setSort] = useState("created_at:desc");
+  const [page, setPage] = useState(1);
   const [modalOpen, setModalOpen] = useState(false);
 
-  const clients = (data || []).filter((c) => {
-    const q = search.trim().toLowerCase();
-    if (!q) return true;
-    return (
-      c.name.toLowerCase().includes(q) ||
-      c.company?.toLowerCase().includes(q) ||
-      c.email?.toLowerCase().includes(q)
-    );
+  const query = useDebounced(search);
+  const [sortBy, order] = useMemo(() => sort.split(":"), [sort]);
+
+  // Reset to the first page whenever a filter changes.
+  useEffect(() => {
+    setPage(1);
+  }, [query, status, sort]);
+
+  const { data, isLoading, error } = useClients({
+    q: query.trim() || undefined,
+    status: status || undefined,
+    sort: sortBy,
+    order,
+    page,
   });
+
+  const clients = data?.clients || [];
+  const meta = data?.meta;
+  const hasFilters = query.trim() !== "" || status !== "";
 
   return (
     <div>
@@ -43,21 +65,19 @@ export default function Clients() {
         }
       />
 
-      {(data?.length || 0) > 0 && (
-        <div className="mb-5 md:w-[320px]">
-          <SearchInput
-            leftIcon={<Search size={16} />}
-            placeholder={t("clients.searchPlaceholder")}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-        </div>
-      )}
+      <ClientsToolbar
+        search={search}
+        onSearch={setSearch}
+        status={status}
+        onStatus={setStatus}
+        sort={sort}
+        onSort={setSort}
+      />
 
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-[150px] rounded-3xl" />
+            <Skeleton key={i} className="h-[180px] rounded-3xl" />
           ))}
         </div>
       ) : error ? (
@@ -65,10 +85,10 @@ export default function Clients() {
       ) : clients.length === 0 ? (
         <EmptyState
           illustration={<ClientsIllo />}
-          title={search ? t("clients.noMatching") : t("clients.noneYet")}
-          description={search ? t("clients.tryDifferent") : t("clients.addFirst")}
+          title={hasFilters ? t("clients.noMatching") : t("clients.noneYet")}
+          description={hasFilters ? t("clients.tryDifferent") : t("clients.addFirst")}
           action={
-            !search && (
+            !hasFilters && (
               <Button variant="accent" onClick={() => setModalOpen(true)}>
                 <Plus size={16} /> {t("clients.add")}
               </Button>
@@ -76,66 +96,14 @@ export default function Clients() {
           }
         />
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {clients.map((c) => (
-            <Card
-              key={c.id}
-              padding="lg"
-              className="cursor-pointer group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/40"
-              onClick={() => nav(`/clients/${c.id}`)}
-              role="button"
-              tabIndex={0}
-              onKeyDown={(e) => {
-                if (e.target.closest?.("button")) return;
-                if (e.key === "Enter" || e.key === " ") {
-                  e.preventDefault();
-                  nav(`/clients/${c.id}`);
-                }
-              }}
-            >
-              <div className="flex items-start gap-3">
-                <div className="h-11 w-11 rounded-full bg-[var(--accent-soft)] text-[var(--accent-strong)] flex items-center justify-center font-semibold shrink-0">
-                  {c.name?.[0]?.toUpperCase() || "?"}
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="font-semibold text-[var(--ink)] truncate group-hover:text-[var(--accent-strong)]">
-                    {c.name}
-                  </div>
-                  <div className="text-xs text-[var(--ink-muted)] truncate">
-                    {c.company || c.email || "—"}
-                  </div>
-                </div>
-                <ArrowRight
-                  size={16}
-                  className="text-[var(--ink-muted)] opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3 mt-5 pt-4 border-t border-[var(--border)]">
-                <div>
-                  <div className="text-[10px] uppercase tracking-wider text-[var(--ink-muted)] font-semibold">
-                    {t("common.totalBilled")}
-                  </div>
-                  <div className="text-sm font-semibold text-[var(--ink)] tabular mt-0.5">
-                    {formatMoney(c.total_billed)}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-[10px] uppercase tracking-wider text-[var(--ink-muted)] font-semibold">
-                    {t("common.outstanding")}
-                  </div>
-                  <div
-                    className={`text-sm font-semibold tabular mt-0.5 ${
-                      c.outstanding > 0 ? "text-[var(--warning)]" : "text-[var(--ink)]"
-                    }`}
-                  >
-                    {formatMoney(c.outstanding)}
-                  </div>
-                </div>
-              </div>
-            </Card>
-          ))}
-        </div>
+        <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {clients.map((c) => (
+              <ClientCard key={c.id} client={c} onOpen={(id) => nav(`/clients/${id}`)} />
+            ))}
+          </div>
+          <Paginator meta={meta} onPage={setPage} />
+        </>
       )}
 
       <ClientFormModal open={modalOpen} onClose={() => setModalOpen(false)} />
