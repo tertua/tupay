@@ -3,7 +3,7 @@
   <p align="center"><img src="docs/assets/banner.png" alt="TuPay" width="100%"></p>
 -->
 
-<p align="center"><img src="https://cdn.tanet.eu.org/img/tupay_dashboard_v2.png" alt="TuPay" width="100%"></p>
+<p align="center"><img src="https://cdn.tanet.eu.org/img/tupay_dashboard_v3.png" alt="TuPay" width="100%"></p>
 <p align="center"><em>Invoicing &amp; payments, minus the busywork.</em></p>
 
 <p align="center">
