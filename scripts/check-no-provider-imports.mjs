@@ -34,6 +34,7 @@ const INFRA_PACKAGES = new Set([
   "mail",
   "captcha",
   "events",
+  "outbox", // background mail/webhook delivery worker, not a payment provider
   "ai",
 ]);
 
