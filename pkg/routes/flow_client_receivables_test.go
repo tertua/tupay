@@ -271,4 +271,3 @@ func TestClientStatementCSVFlow(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotContains(t, body.String(), "INV-")
 }
-
