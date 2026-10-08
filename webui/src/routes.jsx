@@ -7,7 +7,7 @@ import { useLang } from "@/context/LangContext";
 import { fallbackRoute, publicRoutes } from "@/routes/publicRoutes";
 
 const Dashboard = lazy(() => import("@/pages/Dashboard"));
-const Invoices = lazy(() => import("@/pages/Invoices"));
+const Invoices = lazy(() => import("@/pages/Invoices")); const InvoiceTemplates = lazy(() => import("@/pages/InvoiceTemplates"));
 const InvoiceEditor = lazy(() => import("@/pages/InvoiceEditor"));
 const InvoiceDetail = lazy(() => import("@/pages/InvoiceDetail"));
 const Clients = lazy(() => import("@/pages/Clients"));
@@ -41,7 +41,7 @@ export const router = createBrowserRouter([
     errorElement: <RouteError />,
     children: [
       { path: "dashboard", element: <Dashboard /> },
-      { path: "invoices", element: <Invoices /> },
+      { path: "invoices", element: <Invoices /> }, { path: "templates", element: <InvoiceTemplates /> },
       { path: "invoices/new", element: <InvoiceEditor /> },
       { path: "invoices/:id", element: <InvoiceDetail /> },
       { path: "invoices/:id/edit", element: <InvoiceEditor /> },
