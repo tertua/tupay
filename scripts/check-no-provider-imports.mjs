@@ -32,9 +32,9 @@ const INFRA_PACKAGES = new Set([
   "relay",
   "storage",
   "mail",
+  "outbox", // mail/SSE/webhook dispatch + scheduled sweeps (infra, not a provider)
   "captcha",
   "events",
-  "outbox", // background mail/webhook delivery worker, not a payment provider
   "ai",
 ]);
 
