@@ -1474,6 +1474,23 @@ paths:
       - application/json
       description: Get all clients of current user.
       parameters:
+      - description: Case-insensitive search over name, company, email
+        in: query
+        name: q
+        type: string
+      - description: 'Lifecycle status: active or archived (empty = all)'
+        in: query
+        name: status
+        type: string
+      - description: 'Sort column: name, created_at, total_billed, outstanding (default
+          created_at)'
+        in: query
+        name: sort
+        type: string
+      - description: 'Sort direction: asc or desc (default desc)'
+        in: query
+        name: order
+        type: string
       - description: Page number (default 1)
         in: query
         name: page
@@ -1537,6 +1554,11 @@ paths:
           description: ok
           schema:
             type: string
+        "409":
+          description: client has open invoices
+          schema:
+            additionalProperties: true
+            type: object
       security:
       - SessionCookie: []
       summary: delete a client
@@ -1551,6 +1573,11 @@ paths:
         in: path
         name: id
         required: true
+        type: string
+      - description: Set to 1 to return only overdue invoices (stats stay over all
+          invoices)
+        in: query
+        name: overdue
         type: string
       produces:
       - application/json
@@ -1592,6 +1619,30 @@ paths:
       security:
       - SessionCookie: []
       summary: update a client
+      tags:
+      - Clients
+  /clients/{id}/archive:
+    patch:
+      consumes:
+      - application/json
+      description: Archive a client.
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - SessionCookie: []
+      summary: archive a client
       tags:
       - Clients
   /clients/{id}/portal:
@@ -1654,6 +1705,83 @@ paths:
       security:
       - SessionCookie: []
       summary: regenerate client portal link
+      tags:
+      - Clients
+  /clients/{id}/reminder:
+    post:
+      consumes:
+      - application/json
+      description: Send a payment reminder for a client's open invoices.
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - SessionCookie: []
+      summary: send a client reminder
+      tags:
+      - Clients
+  /clients/{id}/statement.csv:
+    get:
+      description: Download a client's invoice statement as CSV.
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      - description: Earliest issue_date (YYYY-MM-DD)
+        in: query
+        name: from
+        type: string
+      - description: Latest issue_date (YYYY-MM-DD)
+        in: query
+        name: to
+        type: string
+      produces:
+      - text/csv
+      responses:
+        "200":
+          description: CSV
+          schema:
+            type: string
+      security:
+      - SessionCookie: []
+      summary: export a client statement
+      tags:
+      - Clients
+  /clients/{id}/unarchive:
+    patch:
+      consumes:
+      - application/json
+      description: Unarchive a client.
+      parameters:
+      - description: Client ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - SessionCookie: []
+      summary: unarchive a client
       tags:
       - Clients
   /config:

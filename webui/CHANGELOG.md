@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- Client receivables tooling: the clients list is now server-driven (search,
+  lifecycle status, sort, pagination), clients can be archived/unarchived, an
+  archived client can be restored, and deleting a client with open invoices is
+  blocked. The client detail gains an overdue-only view, a "Send reminder"
+  action that reuses the scheduled reminder outbox path, and a CSV statement
+  export.
+
 ## [v2.5.0] - 2026-10-08
 
 ### Added
