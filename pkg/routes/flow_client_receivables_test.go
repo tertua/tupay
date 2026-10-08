@@ -1,6 +1,8 @@
 package routes
 
 import (
+	"io"
+	"strings"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -224,3 +226,49 @@ func TestClientReminderFlow(t *testing.T) {
 	assert.Equal(t, 404, resp.StatusCode)
 	resp.Body.Close()
 }
+
+// TestClientStatementCSVFlow covers the statement export: a text/csv attachment
+// whose body carries the invoice number and decimal-string money, with drafts
+// excluded and the optional from/to window narrowing the rows.
+func TestClientStatementCSVFlow(t *testing.T) {
+	app := newTestApp()
+	cookies := registerUser(t, app, "clientstatement@example.com", "secret123")
+
+	clientID := createClient(t, app, cookies, "Acme")
+
+	sent := newInvoice()
+	sent.ClientID, sent.Status, sent.Issue = clientID, models.InvoiceStatusSent, "2026-01-15"
+	sent.Items = []invoiceLine{{Description: "Service", Quantity: 1, Rate: "100000"}}
+	createInvoiceID(t, app, cookies, sent)
+
+	draft := newInvoice()
+	draft.ClientID, draft.Status = clientID, models.InvoiceStatusDraft
+	createInvoiceID(t, app, cookies, draft)
+
+	resp := doRequest(t, app, "GET", "/api/clients/"+clientID+"/statement.csv", "", cookies)
+	require.Equal(t, 200, resp.StatusCode)
+	assert.Contains(t, resp.Header.Get("Content-Type"), "text/csv")
+	assert.Contains(t, resp.Header.Get("Content-Disposition"), "attachment")
+
+	body := new(strings.Builder)
+	_, err := io.Copy(body, resp.Body)
+	resp.Body.Close()
+	require.NoError(t, err)
+	csv := body.String()
+
+	assert.Contains(t, csv, `"invoice_number","issue_date","due_date","status","total","paid_amount","balance","currency"`)
+	assert.Contains(t, csv, "INV-")
+	assert.Contains(t, csv, `"100000"`) // decimal-string money, quoted
+	assert.Contains(t, csv, "2026-01-15")
+	assert.NotContains(t, csv, "draft") // drafts are excluded
+
+	// The from/to window that excludes the invoice drops its row.
+	resp = doRequest(t, app, "GET", "/api/clients/"+clientID+"/statement.csv?from=2027-01-01&to=2027-12-31", "", cookies)
+	require.Equal(t, 200, resp.StatusCode)
+	body.Reset()
+	_, err = io.Copy(body, resp.Body)
+	resp.Body.Close()
+	require.NoError(t, err)
+	assert.NotContains(t, body.String(), "INV-")
+}
+

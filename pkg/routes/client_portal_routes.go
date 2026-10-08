@@ -34,6 +34,10 @@ func registerClientRoutes(route fiber.Router) {
 	// invoice; idempotent via the (invoice, manual) claim.
 	route.Post("/clients/:id/reminder", controllers.SendClientReminder)
 
+	// Statement CSV export: intentionally bypasses the JSON envelope (text/csv
+	// attachment), hence the distinct .csv path segment.
+	route.Get("/clients/:id/statement.csv", controllers.ExportClientStatement)
+
 	// Owner-only portal link lifecycle: PATCH ensures/mints, POST regenerates,
 	// DELETE revokes. RequireOrgRole("owner") gates every mutation.
 	route.Patch("/clients/:id/portal", middleware.RequireOrgRole("owner"), controllers.EnsureClientPortalLink)

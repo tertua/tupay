@@ -1,17 +1,18 @@
-import { Archive, ArchiveRestore, Plus, Pencil, Trash2, Send } from "lucide-react";
+import { Archive, ArchiveRestore, Plus, Pencil, Trash2, Send, Download } from "lucide-react";
 import { Button } from "@/components/ui/Button";
 import { useLang } from "@/context/LangContext";
 import { useArchiveClient, useUnarchiveClient } from "@/hooks/useClients";
-import { useSendClientReminder } from "@/hooks/useClientReceivables";
+import { useSendClientReminder, useExportClientStatement } from "@/hooks/useClientReceivables";
 
 // ClientDetailActions owns the header action cluster: new invoice, edit,
-// archive/unarchive, send reminder and delete. Extracted from ClientDetail.jsx
-// to keep that page within its size ratchet.
+// archive/unarchive, send reminder, export CSV and delete. Extracted from
+// ClientDetail.jsx to keep that page within its size ratchet.
 export function ClientDetailActions({ client, id, onEdit, onDelete, onNewInvoice }) {
   const { t } = useLang();
   const archive = useArchiveClient();
   const unarchive = useUnarchiveClient();
   const reminder = useSendClientReminder();
+  const statement = useExportClientStatement();
 
   const isArchived = client.status === "archived";
 
@@ -32,6 +33,13 @@ export function ClientDetailActions({ client, id, onEdit, onDelete, onNewInvoice
       </Button>
       <Button variant="outline" onClick={() => reminder.mutate(id)} disabled={reminder.isPending}>
         <Send size={15} /> {t("clientDetail.sendReminder")}
+      </Button>
+      <Button
+        variant="outline"
+        onClick={() => statement.mutate({ id, name: client.name })}
+        disabled={statement.isPending}
+      >
+        <Download size={15} /> {t("clientDetail.exportCsv")}
       </Button>
       <Button variant="outline" onClick={() => onEdit()}>
         <Pencil size={15} /> {t("common.edit")}
