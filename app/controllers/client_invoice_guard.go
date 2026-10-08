@@ -19,3 +19,15 @@ func openInvoiceCount(rows []queries.ClientInvoiceRow, pending map[uuid.UUID]boo
 	}
 	return n
 }
+
+// filterOverdue keeps only rows whose effective status is overdue, backing the
+// client-detail overdue-only toggle.
+func filterOverdue(rows []queries.ClientInvoiceRow, pending map[uuid.UUID]bool) []queries.ClientInvoiceRow {
+	out := make([]queries.ClientInvoiceRow, 0, len(rows))
+	for _, row := range rows {
+		if row.EffectiveStatus(pending[row.ID]) == models.InvoiceEffectiveOverdue {
+			out = append(out, row)
+		}
+	}
+	return out
+}

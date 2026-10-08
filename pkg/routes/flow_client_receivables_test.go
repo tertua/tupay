@@ -147,3 +147,35 @@ func TestClientDeleteGuardFlow(t *testing.T) {
 	assert.Equal(t, 204, resp.StatusCode)
 	resp.Body.Close()
 }
+
+// TestClientOverdueViewFlow covers the client-detail overdue toggle: a sent
+// invoice with a past due date shows under ?overdue=1 while a future-due one
+// does not, and stats still count every invoice.
+func TestClientOverdueViewFlow(t *testing.T) {
+	app := newTestApp()
+	cookies := registerUser(t, app, "clientoverdue@example.com", "secret123")
+
+	clientID := createClient(t, app, cookies, "Acme")
+
+	overdueSpec := newInvoice()
+	overdueSpec.ClientID, overdueSpec.Status, overdueSpec.Due = clientID, models.InvoiceStatusSent, "2020-01-01"
+	createInvoiceID(t, app, cookies, overdueSpec)
+
+	futureSpec := newInvoice()
+	futureSpec.ClientID = clientID // newInvoice defaults to a ~30-day future due date
+	createInvoiceID(t, app, cookies, futureSpec)
+
+	// Full view: both invoices.
+	resp := doRequest(t, app, "GET", "/api/clients/"+clientID, "", cookies)
+	require.Equal(t, 200, resp.StatusCode)
+	full := decodeBody(t, resp)
+	assert.Len(t, full["invoices"].([]interface{}), 2)
+
+	// Overdue-only view: just the past-due invoice, stats unchanged.
+	resp = doRequest(t, app, "GET", "/api/clients/"+clientID+"?overdue=1", "", cookies)
+	require.Equal(t, 200, resp.StatusCode)
+	filtered := decodeBody(t, resp)
+	require.Len(t, filtered["invoices"].([]interface{}), 1)
+	assert.Equal(t, "overdue", filtered["invoices"].([]interface{})[0].(map[string]interface{})["effective_status"])
+	assert.Equal(t, float64(2), filtered["stats"].(map[string]interface{})["count"])
+}

@@ -1,9 +1,24 @@
+import { Plus } from "lucide-react";
 import { Card } from "@/components/ui/Card";
+import { Button } from "@/components/ui/Button";
+import { StatusBadge } from "@/components/ui/Badge";
+import { useLang } from "@/context/LangContext";
+import { formatDate, formatMoney, todayDateInput } from "@/lib/utils";
 
 // Presentational pieces split out of ClientDetail.jsx so that page stays
 // within its size ratchet.
 export function ChartFallback() {
   return <div className="h-[320px] rounded-3xl bg-[var(--surface-2)] animate-pulse" />;
+}
+
+// displayStatus / isOverdue mirror the backend effective-status rules for
+// rendering; the server is the source of truth for the actual filters.
+export function displayStatus(inv) {
+  return inv.effective_status || inv.status;
+}
+
+export function isOverdue(inv) {
+  return displayStatus(inv) === "sent" && inv.due_date && inv.due_date < todayDateInput();
 }
 
 export function ContactRow({ icon: Icon, value, href }) {
@@ -37,5 +52,46 @@ export function MiniStat({ label, value, warn }) {
         {value}
       </div>
     </Card>
+  );
+}
+
+// InvoiceHistory renders the client-detail invoice list (optionally filtered
+// to overdue by the server) with a status badge per row.
+export function InvoiceHistory({ invoices, onOpenInvoice, onNewInvoice }) {
+  const { t } = useLang();
+
+  if (invoices.length === 0) {
+    return (
+      <div className="py-10 text-center">
+        <p className="text-sm text-[var(--ink-muted)]">{t("clientDetail.noInvoices")}</p>
+        <Button variant="soft" size="sm" className="mt-3" onClick={() => onNewInvoice()}>
+          <Plus size={14} /> {t("clientDetail.createOne")}
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="divide-y divide-[var(--border)]">
+      {invoices.map((inv) => (
+        <button
+          type="button"
+          key={inv.id}
+          onClick={() => onOpenInvoice(inv.id)}
+          className="w-full flex items-center gap-3 py-3 text-left hover:opacity-90"
+        >
+          <div className="flex-1 min-w-0">
+            <div className="text-sm font-semibold text-[var(--ink)] tabular">{inv.invoice_number}</div>
+            <div className="text-xs text-[var(--ink-muted)]">
+              {t("clientDetail.issuedDue", { issued: formatDate(inv.issue_date), due: formatDate(inv.due_date) })}
+            </div>
+          </div>
+          <div className="text-sm font-semibold text-[var(--ink)] tabular shrink-0">
+            {formatMoney(inv.total, inv.currency)}
+          </div>
+          <StatusBadge status={isOverdue(inv) ? "overdue" : displayStatus(inv)} />
+        </button>
+      ))}
+    </div>
   );
 }

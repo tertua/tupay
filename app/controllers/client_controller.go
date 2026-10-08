@@ -9,7 +9,6 @@ import (
 
 	"github.com/gofiber/fiber/v3"
 	"github.com/google/uuid"
-	"github.com/shopspring/decimal"
 )
 
 // ListClients returns one page of clients for the current user.
@@ -54,78 +53,6 @@ func ListClients(c fiber.Ctx) error {
 	}
 
 	return utils.OK(c, fiber.StatusOK, fiber.Map{"clients": clients, "meta": paging.Meta(total)})
-}
-
-// @Description Get client by ID with invoices and stats.
-// @Summary get client by ID with invoices and stats
-// @Tags Clients
-// @Accept json
-// @Produce json
-// @Param id path string true "Client ID"
-// @Success 200 {object} map[string]interface{}
-// @Security SessionCookie
-// @Router /clients/{id} [get]
-func GetClient(c fiber.Ctx) error {
-	orgID, err := utils.CurrentOrgID(c)
-	if err != nil {
-		return utils.Fail(c, fiber.StatusUnauthorized, "unauthorized, please sign in again", nil)
-	}
-
-	id, err := uuid.Parse(c.Params("id"))
-	if err != nil {
-		return utils.Fail(c, fiber.StatusBadRequest, "invalid client id", nil)
-	}
-
-	db, ok := openDB(c)
-	if !ok {
-		return nil
-	}
-
-	client, err := db.GetClient(orgID, id)
-	if err != nil {
-		return utils.NotFoundOrFailed(c, err, "client")
-	}
-
-	rows, err := db.ClientInvoices(orgID, id)
-	if err != nil {
-		return utils.Fail(c, fiber.StatusInternalServerError, "failed to load client invoices", nil)
-	}
-
-	invoices := make([]clientInvoiceRow, 0, len(rows))
-	var totalBilled, paidTotal decimal.Decimal
-	pending := db.PendingInvoiceIDs(orgID)
-	for _, row := range rows {
-		paid := row.PaidAmount
-		// Anything not still a draft is billed: sent, overdue, paid, pending.
-		if row.EffectiveStatus(pending[row.ID]) != models.InvoiceStatusDraft {
-			totalBilled = totalBilled.Add(row.Total)
-			paidTotal = paidTotal.Add(paid)
-		}
-		invoices = append(invoices, clientInvoiceRow{
-			ID:              row.ID,
-			InvoiceNumber:   row.InvoiceNumber,
-			IssueDate:       utils.FormatDate(row.IssueDate),
-			DueDate:         utils.FormatDate(row.DueDate),
-			Total:           row.Total,
-			Currency:        row.Currency,
-			Status:          row.Status,
-			EffectiveStatus: row.EffectiveStatus(pending[row.ID]),
-			PaidAmount:      paid,
-			Balance:         row.Total.Sub(paid),
-		})
-	}
-
-	stats := models.ClientStats{
-		Count:       len(rows),
-		TotalBilled: totalBilled,
-		Outstanding: totalBilled.Sub(paidTotal),
-	}
-
-	return utils.OK(c, fiber.StatusOK, clientDetailResponse{
-		Client:   client,
-		Invoices: invoices,
-		Stats:    stats,
-	})
 }
 
 // CreateClient creates a new client.

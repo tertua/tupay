@@ -1,42 +1,24 @@
 import { lazy, Suspense, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import {
-  ArrowLeft,
-  Pencil,
-  Trash2,
-  Plus,
-  Loader2,
-  Mail,
-  Phone,
-  MapPin,
-  Building2,
-} from "lucide-react";
+import { ArrowLeft, Loader2, Mail, Phone, MapPin, Building2 } from "lucide-react";
 import { Card, CardTitle } from "@/components/ui/Card";
-import { Button } from "@/components/ui/Button";
-import { StatusBadge } from "@/components/ui/Badge";
+import { ClientStatusBadge } from "@/components/ui/ClientStatusBadge";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ClientFormModal } from "@/components/clients/ClientFormModal";
 import ClientPortalCard from "@/components/clients/ClientPortalCard";
-import { ChartFallback, ContactRow, MiniStat } from "@/components/clients/ClientDetailParts";
+import { ClientDetailActions } from "@/components/clients/ClientDetailActions";
+import { ChartFallback, ContactRow, MiniStat, InvoiceHistory, displayStatus } from "@/components/clients/ClientDetailParts";
 import { useClient, useDeleteClient } from "@/hooks/useClients";
 import { useLang } from "@/context/LangContext";
-import { formatMoney, formatDate, formatMonthShort, todayDateInput } from "@/lib/utils";
+import { formatMoney, formatMonthShort } from "@/lib/utils";
 
 const ClientCharts = lazy(() => import("@/components/clients/ClientCharts"));
-
-function displayStatus(inv) {
-  return inv.effective_status || inv.status;
-}
-
-function isOverdue(inv) {
-  return displayStatus(inv) === "sent" && inv.due_date && inv.due_date < todayDateInput();
-}
 
 // Everything below is derived from the invoices already loaded — no extra API call.
 function computeInsights(invoices, stats, t) {
   const num = (v) => Number(v) || 0;
   const paidAmt = invoices.filter((i) => displayStatus(i) === "paid").reduce((s, i) => s + num(i.total), 0);
-  const overdueAmt = invoices.filter(isOverdue).reduce((s, i) => s + num(i.total), 0);
+  const overdueAmt = invoices.filter((i) => displayStatus(i) === "overdue").reduce((s, i) => s + num(i.total), 0);
   const openAmt = Math.max(0, num(stats.totalBilled) - paidAmt - overdueAmt);
 
   const breakdown = [
@@ -58,10 +40,7 @@ function computeInsights(invoices, stats, t) {
   for (let i = 5; i >= 0; i--) {
     const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const key = `${d.getFullYear()}-${d.getMonth()}`;
-    monthly.push({
-      label: formatMonthShort(d),
-      value: Math.round((map[key] || 0) * 100) / 100,
-    });
+    monthly.push({ label: formatMonthShort(d), value: Math.round((map[key] || 0) * 100) / 100 });
   }
 
   const paidCount = invoices.filter((i) => displayStatus(i) === "paid").length;
@@ -77,7 +56,8 @@ export default function ClientDetail() {
   const { id } = useParams();
   const nav = useNavigate();
   const { t } = useLang();
-  const { data, isLoading, error } = useClient(id);
+  const [overdueOnly, setOverdueOnly] = useState(false);
+  const { data, isLoading, error } = useClient(id, overdueOnly ? { overdue: 1 } : undefined);
   const del = useDeleteClient();
   const [editOpen, setEditOpen] = useState(false);
 
@@ -123,25 +103,21 @@ export default function ClientDetail() {
               {client.name?.[0]?.toUpperCase() || "?"}
             </div>
             <div>
-              <h2 className="font-display text-2xl font-semibold tracking-tight">{client.name}</h2>
+              <div className="flex items-center gap-2">
+                <h2 className="font-display text-2xl font-semibold tracking-tight">{client.name}</h2>
+                <ClientStatusBadge status={client.status} />
+              </div>
               {client.company && <p className="text-sm text-[var(--ink-muted)]">{client.company}</p>}
             </div>
           </div>
         </div>
-        <div className="flex items-center gap-2">
-          <Button
-            variant="accent"
-            onClick={() => nav(`/invoices/new?client=${id}`)}
-          >
-            <Plus size={15} /> {t("clientDetail.newInvoice")}
-          </Button>
-          <Button variant="outline" onClick={() => setEditOpen(true)}>
-            <Pencil size={15} /> {t("common.edit")}
-          </Button>
-          <Button variant="ghost" onClick={onDelete} aria-label={t("common.delete")} title={t("common.delete")} className="text-[var(--danger)] hover:bg-[var(--danger)]/10">
-            <Trash2 size={15} />
-          </Button>
-        </div>
+        <ClientDetailActions
+          client={client}
+          id={id}
+          onEdit={() => setEditOpen(true)}
+          onDelete={onDelete}
+          onNewInvoice={() => nav(`/invoices/new?client=${id}`)}
+        />
       </div>
 
       {/* Stats — full-width row so currency values have room */}
@@ -177,46 +153,36 @@ export default function ClientDetail() {
         {/* Right: invoice history */}
         <div className="lg:col-span-2">
           <Card padding="lg">
-            <CardTitle className="mb-4">{t("clientDetail.invoiceHistory")}</CardTitle>
-            {invoiceList.length === 0 ? (
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <CardTitle>{t("clientDetail.invoiceHistory")}</CardTitle>
+              <label className="flex items-center gap-2 text-xs text-[var(--ink-muted)] cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  className="accent-[var(--accent)]"
+                  checked={overdueOnly}
+                  onChange={(e) => setOverdueOnly(e.target.checked)}
+                />
+                {t("clientDetail.overdueOnly")}
+              </label>
+            </div>
+            {overdueOnly && invoiceList.length === 0 ? (
               <div className="py-10 text-center">
-                <p className="text-sm text-[var(--ink-muted)]">{t("clientDetail.noInvoices")}</p>
-                <Button variant="soft" size="sm" className="mt-3" onClick={() => nav(`/invoices/new?client=${id}`)}>
-                  <Plus size={14} /> {t("clientDetail.createOne")}
-                </Button>
+                <p className="text-sm text-[var(--ink-muted)]">{t("clientDetail.noOverdue")}</p>
               </div>
             ) : (
-              <div className="divide-y divide-[var(--border)]">
-                {invoiceList.map((inv) => (
-                  <button type="button"
-                    key={inv.id}
-                    onClick={() => nav(`/invoices/${inv.id}`)}
-                    className="w-full flex items-center gap-3 py-3 text-left hover:opacity-90"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="text-sm font-semibold text-[var(--ink)] tabular">
-                        {inv.invoice_number}
-                      </div>
-                      <div className="text-xs text-[var(--ink-muted)]">
-                        {t("clientDetail.issuedDue", { issued: formatDate(inv.issue_date), due: formatDate(inv.due_date) })}
-                      </div>
-                    </div>
-                    <div className="text-sm font-semibold text-[var(--ink)] tabular shrink-0">
-                      {formatMoney(inv.total, inv.currency)}
-                    </div>
-                    <StatusBadge
-                      status={isOverdue(inv) ? "overdue" : displayStatus(inv)}
-                    />
-                  </button>
-                ))}
-              </div>
+              <InvoiceHistory
+                invoices={invoiceList}
+                id={id}
+                onOpenInvoice={(invoiceId) => nav(`/invoices/${invoiceId}`)}
+                onNewInvoice={() => nav(`/invoices/new?client=${id}`)}
+              />
             )}
           </Card>
         </div>
       </div>
 
       {/* Insights row — aligns with the columns above (1 / 2 split) */}
-      {invoiceList.length > 0 && (
+      {!overdueOnly && invoiceList.length > 0 && (
         <Suspense fallback={<ChartFallback />}>
           <ClientCharts insights={insights} />
         </Suspense>

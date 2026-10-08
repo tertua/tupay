@@ -44,3 +44,20 @@ func TestOpenInvoiceCount(t *testing.T) {
 		map[uuid.UUID]bool{draftID: true},
 	))
 }
+
+// TestFilterOverdue keeps only rows whose effective status is overdue.
+func TestFilterOverdue(t *testing.T) {
+	past := time.Now().AddDate(0, 0, -5)
+	future := time.Now().AddDate(0, 0, 5)
+	total := decimal.NewFromInt(1000)
+
+	overdue := queries.ClientInvoiceRow{ID: uuid.New(), Status: models.InvoiceStatusSent, DueDate: &past, Total: total, PaidAmount: decimal.Zero}
+	sent := queries.ClientInvoiceRow{ID: uuid.New(), Status: models.InvoiceStatusSent, DueDate: &future, Total: total, PaidAmount: decimal.Zero}
+	draft := queries.ClientInvoiceRow{ID: uuid.New(), Status: models.InvoiceStatusDraft, Total: total, PaidAmount: decimal.Zero}
+
+	out := filterOverdue([]queries.ClientInvoiceRow{sent, overdue, draft}, nil)
+	assert.Len(t, out, 1)
+	assert.Equal(t, overdue.ID, out[0].ID)
+
+	assert.Empty(t, filterOverdue(nil, nil))
+}
