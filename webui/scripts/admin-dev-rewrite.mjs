@@ -1,4 +1,4 @@
-// Dev serves files by name, so clean /admin URLs must rewrite to admin.html to match the production fallback (pkg/routes/spa_route.go).
+// Dev serves files by name, so clean /admin URLs must rewrite to admin.html to match the production fallback (pkg/routes/webui_route.go).
 export default function adminDevRewrite() {
   return {
     name: "admin-dev-rewrite",

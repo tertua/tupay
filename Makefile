@@ -63,23 +63,23 @@ db.restore:
 docker.run: docker.network docker.postgres swag docker.fiber docker.redis
 
 docker.network:
-	docker network inspect template-network >/dev/null 2>&1 || \
-	docker network create -d bridge template-network
+	docker network inspect tupay-network >/dev/null 2>&1 || \
+	docker network create -d bridge tupay-network
 
 docker.fiber.build:
 	docker build -t tupay .
 
 docker.fiber: docker.fiber.build
 	docker run --rm -d \
-		--name template-fiber \
-		--network template-network \
+		--name tupay-fiber \
+		--network tupay-network \
 		-p 5000:5000 \
 		tupay
 
 docker.postgres:
 	docker run --rm -d \
-		--name template-postgres \
-		--network template-network \
+		--name tupay-postgres \
+		--network tupay-network \
 		-e POSTGRES_USER=postgres \
 		-e POSTGRES_PASSWORD=password \
 		-e POSTGRES_DB=postgres \
@@ -89,21 +89,21 @@ docker.postgres:
 
 docker.redis:
 	docker run --rm -d \
-		--name template-redis \
-		--network template-network \
+		--name tupay-redis \
+		--network tupay-network \
 		-p 6379:6379 \
 		redis
 
 docker.stop: docker.stop.fiber docker.stop.postgres docker.stop.redis
 
 docker.stop.fiber:
-	docker stop template-fiber
+	docker stop tupay-fiber
 
 docker.stop.postgres:
-	docker stop template-postgres
+	docker stop tupay-postgres
 
 docker.stop.redis:
-	docker stop template-redis
+	docker stop tupay-redis
 
 swag:
 	swag init

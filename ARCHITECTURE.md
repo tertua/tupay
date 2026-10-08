@@ -367,7 +367,7 @@ make dev-be  # Build + run API di /tmp/opencode/tupay:5000
 make dev-fe  # Vite dev :5173, proxy /api → :5000
 ```
 
-**Docker Compose** (Postgres + Redis + API)
+**Docker** (Postgres + Redis + API)
 ```bash
 make docker.run   # Start stack
 make docker.stop  # Stop stack
