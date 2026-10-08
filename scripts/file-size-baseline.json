@@ -31,7 +31,7 @@
  "app/models/ai_model.go": 13,
  "app/models/audit_log_model.go": 24,
  "app/models/auth_model.go": 50,
- "app/models/client_model.go": 23,
+ "app/models/client_model.go": 24,
  "app/models/dashboard_model.go": 37,
  "app/models/expense_model.go": 35,
  "app/models/gateway_project_model.go": 37,

@@ -299,4 +299,18 @@ var migrations = []Migration{
 		// to 24 leaves the schema the previous binary expects.
 		Down: renameSubscriptionTablesDown,
 	},
+	{
+		Version:     26,
+		Description: "client lifecycle status (active | archived)",
+		// Forward: AutoMigrate adds the column (default active); the backfill
+		// step in clients_status_backfill.go repairs rows created before the
+		// column. Down drops the column so a rollback to 25 leaves the schema
+		// the previous binary expects.
+		Down: func(db *gorm.DB) error {
+			if !db.Migrator().HasColumn(&models.Client{}, "status") {
+				return nil
+			}
+			return db.Migrator().DropColumn(&models.Client{}, "status")
+		},
+	},
 }

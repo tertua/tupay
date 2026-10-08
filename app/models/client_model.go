@@ -20,4 +20,5 @@ type Client struct {
 	Phone   string `db:"phone" json:"phone" validate:"lte=100"`
 	Address string `db:"address" json:"address"`
 	Notes   string `db:"notes" json:"notes"`
+	Status  string `db:"status" json:"status" gorm:"size:16;default:active;index" validate:"omitempty,oneof=active archived"`
 }

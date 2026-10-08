@@ -30,6 +30,9 @@ func runStartupDataSteps(db *gorm.DB) error {
 	if err := ensureUserEmailIndex(db); err != nil {
 		return fmt.Errorf("user email index: %w", err)
 	}
+	if err := backfillClientStatus(db); err != nil {
+		return fmt.Errorf("client status backfill: %w", err)
+	}
 	return nil
 }
 
