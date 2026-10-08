@@ -49,7 +49,7 @@
  "app/models/user_model.go": 19,
  "app/queries/audit_query.go": 44,
  "app/queries/client_list_query.go": 44,
- "app/queries/client_query.go": 70,
+ "app/queries/client_query.go": 60,
  "app/queries/dashboard_query.go": 138,
  "app/queries/dashboard_recent_query.go": 74,
  "app/queries/errors.go": 17,

@@ -13,15 +13,22 @@ func registerPublicClientRoutes(route fiber.Router, limiter fiber.Handler) {
 	route.Get("/public/client/:token/invoice/:id", limiter, controllers.GetPublicClientInvoice)
 }
 
-// registerClientRoutes wires the tenant's client CRUD plus the owner-only
-// client-portal link lifecycle onto the private session group. Split out of
-// private_routes.go so the router index stays within its size ratchet.
+// registerClientRoutes wires the tenant's client CRUD, the owner-only
+// client-portal link lifecycle, and the owner-only archive lifecycle onto the
+// private session group. Split out of private_routes.go so the router index
+// stays within its size ratchet.
 func registerClientRoutes(route fiber.Router) {
 	route.Get("/clients", controllers.ListClients)         // get all clients
 	route.Post("/clients", controllers.CreateClient)       // create a new client
 	route.Get("/clients/:id", controllers.GetClient)       // get client with invoices and stats
 	route.Patch("/clients/:id", controllers.UpdateClient)  // update a client
 	route.Delete("/clients/:id", controllers.DeleteClient) // delete a client
+
+	// Client lifecycle: archive/unarchive flip status. The more specific
+	// :id/archive paths do not collide with :id in Fiber, but they sit after
+	// the CRUD lines so the generic routes stay grouped.
+	route.Patch("/clients/:id/archive", middleware.RequireOrgRole("owner"), controllers.ArchiveClient)
+	route.Patch("/clients/:id/unarchive", middleware.RequireOrgRole("owner"), controllers.UnarchiveClient)
 
 	// Owner-only portal link lifecycle: PATCH ensures/mints, POST regenerates,
 	// DELETE revokes. RequireOrgRole("owner") gates every mutation.

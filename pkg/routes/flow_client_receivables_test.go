@@ -59,3 +59,50 @@ func TestClientListSearchSortFlow(t *testing.T) {
 	assert.Equal(t, float64(2), pagedMeta["total_pages"])
 	require.Len(t, paged["clients"].([]interface{}), 1)
 }
+
+// TestClientStatusLifecycleFlow covers archive/unarchive: the status flips,
+// the list status filter follows it, and flipping to the already-current
+// state is a stable 409.
+func TestClientStatusLifecycleFlow(t *testing.T) {
+	app := newTestApp()
+	cookies := registerUser(t, app, "clientlifecycle@example.com", "secret123")
+
+	client := createClientNamed(t, app, cookies, clientSpec{Name: "Acme"})
+	clientID := client["id"].(string)
+	assert.Equal(t, "active", client["status"])
+
+	// Archive: status flips and the archived filter finds it, active excludes it.
+	resp := doRequest(t, app, "PATCH", "/api/clients/"+clientID+"/archive", "{}", cookies)
+	require.Equal(t, 200, resp.StatusCode)
+	archived := decodeBody(t, resp)["client"].(map[string]interface{})
+	assert.Equal(t, "archived", archived["status"])
+
+	archivedList := listClients(t, app, cookies, "status=archived")
+	require.Len(t, archivedList["clients"].([]interface{}), 1)
+	activeList := listClients(t, app, cookies, "status=active")
+	assert.Len(t, activeList["clients"].([]interface{}), 0)
+
+	// Archiving twice is a stable 409.
+	resp = doRequest(t, app, "PATCH", "/api/clients/"+clientID+"/archive", "{}", cookies)
+	assert.Equal(t, 409, resp.StatusCode)
+	resp.Body.Close()
+
+	// Detail carries the lifecycle status.
+	resp = doRequest(t, app, "GET", "/api/clients/"+clientID, "", cookies)
+	require.Equal(t, 200, resp.StatusCode)
+	assert.Equal(t, "archived", decodeBody(t, resp)["client"].(map[string]interface{})["status"])
+
+	// Unarchive: back to active, and unarchiving again is a 409.
+	resp = doRequest(t, app, "PATCH", "/api/clients/"+clientID+"/unarchive", "{}", cookies)
+	require.Equal(t, 200, resp.StatusCode)
+	assert.Equal(t, "active", decodeBody(t, resp)["client"].(map[string]interface{})["status"])
+
+	resp = doRequest(t, app, "PATCH", "/api/clients/"+clientID+"/unarchive", "{}", cookies)
+	assert.Equal(t, 409, resp.StatusCode)
+	resp.Body.Close()
+
+	// Unknown client id is a 404, not a 500.
+	resp = doRequest(t, app, "PATCH", "/api/clients/00000000-0000-0000-0000-000000000000/archive", "{}", cookies)
+	assert.Equal(t, 404, resp.StatusCode)
+	resp.Body.Close()
+}
