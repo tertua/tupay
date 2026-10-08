@@ -13,15 +13,6 @@ type ClientQueries struct {
 	*gorm.DB
 }
 
-// CountClients returns the total clients of an org for pagination meta.
-func (q *ClientQueries) CountClients(orgID uuid.UUID) (int64, error) {
-	var total int64
-	if err := q.Model(&models.Client{}).Where("org_id = ?", orgID).Count(&total).Error; err != nil {
-		return 0, err
-	}
-	return total, nil
-}
-
 // GetClient returns one client of an org by ID.
 func (q *ClientQueries) GetClient(orgID, id uuid.UUID) (models.Client, error) {
 	client := models.Client{}

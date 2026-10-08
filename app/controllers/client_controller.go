@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"strings"
 	"time"
 
 	"github.com/tertua/tupay/app/models"
@@ -17,6 +18,10 @@ import (
 // @Tags Clients
 // @Accept json
 // @Produce json
+// @Param q query string false "Case-insensitive search over name, company, email"
+// @Param status query string false "Lifecycle status: active or archived (empty = all)"
+// @Param sort query string false "Sort column: name, created_at, total_billed, outstanding (default created_at)"
+// @Param order query string false "Sort direction: asc or desc (default desc)"
 // @Param page query int false "Page number (default 1)"
 // @Param per_page query int false "Items per page (default 20, max 100)"
 // @Success 200 {object} map[string]interface{}
@@ -33,12 +38,17 @@ func ListClients(c fiber.Ctx) error {
 		return nil
 	}
 
+	search := strings.TrimSpace(c.Query("q"))
+	status := strings.TrimSpace(c.Query("status"))
+	sort := strings.TrimSpace(c.Query("sort"))
+	order := strings.TrimSpace(c.Query("order"))
+
 	paging := utils.ParsePagination(c)
-	clients, err := db.ListClients(orgID, paging.Limit(), paging.Offset())
+	clients, err := db.ListClients(orgID, search, status, sort, order, paging.Limit(), paging.Offset())
 	if err != nil {
 		return utils.Fail(c, fiber.StatusInternalServerError, "failed to load clients", nil)
 	}
-	total, err := db.CountClients(orgID)
+	total, err := db.CountClients(orgID, status, search)
 	if err != nil {
 		return utils.Fail(c, fiber.StatusInternalServerError, "failed to count clients", nil)
 	}

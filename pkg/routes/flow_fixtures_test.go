@@ -83,6 +83,45 @@ func createClient(t *testing.T, app *fiber.App, cookies []*http.Cookie, name str
 	return decodeBody(t, resp)["client"].(map[string]interface{})["id"].(string)
 }
 
+// clientSpec describes the fields a client flow test cares about; empty
+// fields are omitted from the payload so search/sort tests can set exactly
+// the name/company/email they exercise.
+type clientSpec struct {
+	Name    string `json:"name"`
+	Email   string `json:"email,omitempty"`
+	Company string `json:"company,omitempty"`
+}
+
+// clientBody renders the spec as the JSON request body.
+func (s clientSpec) body(t *testing.T) string {
+	t.Helper()
+	raw, err := json.Marshal(s)
+	require.NoError(t, err)
+	return string(raw)
+}
+
+// createClientNamed creates a client from a spec and returns the decoded
+// "client" object so callers can assert on status and aggregates.
+func createClientNamed(t *testing.T, app *fiber.App, cookies []*http.Cookie, spec clientSpec) map[string]interface{} {
+	t.Helper()
+	resp := doRequest(t, app, "POST", "/api/clients", spec.body(t), cookies)
+	require.Equal(t, 201, resp.StatusCode, "createClientNamed: %s", spec.body(t))
+	return decodeBody(t, resp)["client"].(map[string]interface{})
+}
+
+// listClients GETs /api/clients with a raw query string and returns the
+// decoded data object ({clients, meta}); query is appended verbatim when set.
+func listClients(t *testing.T, app *fiber.App, cookies []*http.Cookie, query string) map[string]interface{} {
+	t.Helper()
+	path := "/api/clients"
+	if query != "" {
+		path += "?" + query
+	}
+	resp := doRequest(t, app, "GET", path, "", cookies)
+	require.Equal(t, 200, resp.StatusCode, "listClients: %s", query)
+	return decodeBody(t, resp)
+}
+
 // registerUser registers an account (201, or 409 when the email is taken) and logs in, returning the session cookies; doRequest echoes the CSRF cookie as its header.
 func registerUser(t *testing.T, app *fiber.App, email, password string) []*http.Cookie {
 	t.Helper()

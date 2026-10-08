@@ -48,7 +48,7 @@
  "app/models/settings_model.go": 35,
  "app/models/user_model.go": 19,
  "app/queries/audit_query.go": 44,
- "app/queries/client_list_query.go": 45,
+ "app/queries/client_list_query.go": 44,
  "app/queries/client_query.go": 70,
  "app/queries/dashboard_query.go": 138,
  "app/queries/dashboard_recent_query.go": 74,
