@@ -114,6 +114,7 @@ func (w *Worker) ProcessOnce(ctx context.Context) {
 	w.processNotifications(ctx)
 	w.reconcileGateway(ctx)
 	w.remindInvoices(ctx)
+	w.generateRecurringInvoices(ctx)
 	w.purgeIdempotency()
 }
 

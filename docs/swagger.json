@@ -2131,6 +2131,243 @@
                 }
             }
         },
+        "/invoice-templates": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "Get recurring invoice templates of current org.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "InvoiceTemplates"
+                ],
+                "summary": "list invoice templates",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Page number (default 1)",
+                        "name": "page",
+                        "in": "query"
+                    },
+                    {
+                        "type": "integer",
+                        "description": "Items per page (default 20, max 100)",
+                        "name": "per_page",
+                        "in": "query"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "Create a recurring invoice template.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "InvoiceTemplates"
+                ],
+                "summary": "create invoice template",
+                "parameters": [
+                    {
+                        "description": "Invoice template payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.InvoiceTemplateInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "Created",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/invoice-templates/{id}": {
+            "get": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "Get a recurring invoice template by ID.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "InvoiceTemplates"
+                ],
+                "summary": "get invoice template",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Invoice template ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "Delete a recurring invoice template.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "InvoiceTemplates"
+                ],
+                "summary": "delete invoice template",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Invoice template ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "ok",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "patch": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "Update a recurring invoice template.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "InvoiceTemplates"
+                ],
+                "summary": "update invoice template",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Invoice template ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Invoice template payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.InvoiceTemplateInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
+        "/invoice-templates/{id}/status": {
+            "patch": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "Update a recurring invoice template's status.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "InvoiceTemplates"
+                ],
+                "summary": "update invoice template status",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "Invoice template ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    },
+                    {
+                        "description": "Status payload",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/models.InvoiceTemplateStatusInput"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
+        },
         "/invoices": {
             "get": {
                 "security": [
@@ -4388,6 +4625,109 @@
                         "draft",
                         "sent",
                         "paid"
+                    ]
+                }
+            }
+        },
+        "models.InvoiceTemplateInput": {
+            "type": "object",
+            "required": [
+                "cadence",
+                "currency",
+                "invoice_status",
+                "items",
+                "name",
+                "status"
+            ],
+            "properties": {
+                "cadence": {
+                    "type": "string",
+                    "enum": [
+                        "weekly",
+                        "monthly"
+                    ]
+                },
+                "client_id": {
+                    "type": "string"
+                },
+                "currency": {
+                    "type": "string",
+                    "maxLength": 3
+                },
+                "discount": {
+                    "type": "number"
+                },
+                "due_days": {
+                    "type": "integer",
+                    "maximum": 365,
+                    "minimum": 0
+                },
+                "invoice_status": {
+                    "type": "string",
+                    "enum": [
+                        "draft",
+                        "sent"
+                    ]
+                },
+                "items": {
+                    "type": "array",
+                    "minItems": 1,
+                    "items": {
+                        "$ref": "#/definitions/models.InvoiceItemInput"
+                    }
+                },
+                "lead_days": {
+                    "type": "integer",
+                    "maximum": 90,
+                    "minimum": 0
+                },
+                "name": {
+                    "type": "string",
+                    "maxLength": 120
+                },
+                "notes": {
+                    "type": "string"
+                },
+                "payment_method": {
+                    "description": "PaymentMethod mirrors the Invoice column; see the comment there.",
+                    "type": "string",
+                    "maxLength": 32,
+                    "enum": [
+                        "Cash",
+                        "Bank transfer",
+                        "Online"
+                    ]
+                },
+                "start_date": {
+                    "type": "string"
+                },
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "paused"
+                    ]
+                },
+                "tax_rate": {
+                    "type": "number",
+                    "minimum": 0
+                },
+                "terms": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.InvoiceTemplateStatusInput": {
+            "type": "object",
+            "required": [
+                "status"
+            ],
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "active",
+                        "paused"
                     ]
                 }
             }

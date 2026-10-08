@@ -11,6 +11,10 @@ import (
 	"github.com/shopspring/decimal"
 )
 
+// The item/subtotal/tax math lives in models (AddInvoiceItems /
+// ApplyInvoiceTotals) so the outbox recurring sweep shares one source of truth
+// without importing this package; buildInvoice is the HTTP-request wrapper.
+
 // buildInvoice computes invoice and item rows.
 func buildInvoice(orgID, userID uuid.UUID, input *models.InvoiceInput) (*models.Invoice, []models.InvoiceItem, error) {
 	issueDate, err := utils.ParseDate(input.IssueDate)
@@ -47,45 +51,13 @@ func buildInvoice(orgID, userID uuid.UUID, input *models.InvoiceInput) (*models.
 		PaymentMethod: input.PaymentMethod,
 	}
 
-	items, err := addItemRows(invoice, input.Items)
+	items, err := models.AddInvoiceItems(invoice, input.Items)
 	if err != nil {
 		return nil, nil, err
 	}
-	applyInvoiceTotals(invoice)
+	models.ApplyInvoiceTotals(invoice)
 
 	return invoice, items, nil
-}
-
-// addItemRows builds the item rows and accumulates the invoice subtotal, rejecting negative money values; both create paths run it.
-func addItemRows(invoice *models.Invoice, entries []models.InvoiceItemInput) ([]models.InvoiceItem, error) {
-	items := make([]models.InvoiceItem, 0, len(entries))
-	for position, entry := range entries {
-		if entry.Rate.IsNegative() || invoice.Discount.IsNegative() {
-			return nil, errors.New("money values cannot be negative")
-		}
-		amount := models.DecimalFromFloat(entry.Quantity).Mul(entry.Rate)
-		invoice.Subtotal = invoice.Subtotal.Add(amount)
-		items = append(items, models.InvoiceItem{
-			ID:          uuid.New(),
-			InvoiceID:   invoice.ID,
-			Description: entry.Description,
-			Quantity:    entry.Quantity,
-			Rate:        entry.Rate,
-			Amount:      amount,
-			Position:    position,
-		})
-	}
-	return items, nil
-}
-
-// applyInvoiceTotals derives taxable, tax and total from the subtotal, the discount and the tax rate.
-func applyInvoiceTotals(invoice *models.Invoice) {
-	taxable := invoice.Subtotal.Sub(invoice.Discount)
-	if taxable.IsNegative() {
-		taxable = decimal.Zero
-	}
-	invoice.TaxAmount = taxable.Mul(models.DecimalFromFloat(invoice.TaxRate)).Div(decimal.NewFromInt(100))
-	invoice.Total = taxable.Add(invoice.TaxAmount)
 }
 
 // isPaidLocked reports whether an invoice is effectively paid (stored paid or payments covering the total) and must be treated as immutable.

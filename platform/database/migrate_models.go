@@ -33,5 +33,8 @@ func autoMigrateList() []any {
 		&models.Membership{},
 		&models.OrgInvite{},
 		&models.InvoiceReminderLog{},
+		&models.InvoiceTemplate{},
+		&models.InvoiceTemplateItem{},
+		&models.InvoiceTemplateRun{},
 	}
 }

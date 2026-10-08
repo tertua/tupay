@@ -24,4 +24,7 @@ func registerInvoiceRoutes(route fiber.Router) {
 		middleware.RequireOrgRole("owner"),
 		middleware.Idempotency(middleware.SessionIdempotencyScope),
 		middleware.WithAITimeout(controllers.CreateInvoiceIntent))
+	// Recurring invoice templates (literal paths, so they can never be shadowed
+	// by /invoices/:id) are registered here to keep private_routes.go flat.
+	registerInvoiceTemplateRoutes(route)
 }

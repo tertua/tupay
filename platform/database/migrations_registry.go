@@ -272,4 +272,20 @@ var migrations = []Migration{
 			return db.Migrator().DropTable(&models.ClientLink{})
 		},
 	},
+	{
+		Version:     24,
+		Description: "recurring invoice templates + run ledger",
+		// Fresh additive tables: Down drops them in FK-safe order (ledger, then
+		// items, then headers); AutoMigrate recreates them on the next startup
+		// with this binary (forward upgrades run via AutoMigrate).
+		Down: func(db *gorm.DB) error {
+			if err := db.Migrator().DropTable(&models.InvoiceTemplateRun{}); err != nil {
+				return err
+			}
+			if err := db.Migrator().DropTable(&models.InvoiceTemplateItem{}); err != nil {
+				return err
+			}
+			return db.Migrator().DropTable(&models.InvoiceTemplate{})
+		},
+	},
 }

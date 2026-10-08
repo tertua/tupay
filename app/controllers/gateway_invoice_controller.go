@@ -68,11 +68,11 @@ func CreateGatewayInvoice(c fiber.Ctx) error {
 		TaxRate: input.TaxRate, Discount: input.Discount, Notes: input.Notes, Terms: input.Terms}
 	projectSlug, externalID := project.Slug, input.ExternalID
 	invoice.GatewayProjectSlug, invoice.ExternalID = &projectSlug, &externalID
-	items, itemErr := addItemRows(invoice, input.Items)
+	items, itemErr := models.AddInvoiceItems(invoice, input.Items)
 	if itemErr != nil {
 		return utils.Fail(c, fiber.StatusBadRequest, itemErr.Error(), nil)
 	}
-	applyInvoiceTotals(invoice)
+	models.ApplyInvoiceTotals(invoice)
 	err = db.InvoiceQueries.Transaction(func(tx *gorm.DB) error {
 		client := models.Client{}
 		if lookupErr := tx.Where("gateway_project_slug = ? AND external_id = ?", project.Slug, input.Customer.ExternalID).First(&client).Error; errors.Is(lookupErr, gorm.ErrRecordNotFound) {

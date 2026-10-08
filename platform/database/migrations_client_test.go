@@ -31,8 +31,8 @@ func TestClientLinksMigration(t *testing.T) {
 	if err != nil {
 		t.Fatalf("expected version stamp, got: %v", err)
 	}
-	if stamp != 23 {
-		t.Fatalf("expected schema version 23, got %d", stamp)
+	if stamp != SchemaVersion {
+		t.Fatalf("expected schema version %d, got %d", SchemaVersion, stamp)
 	}
 
 	// Re-migrate must be a no-op (idempotent) and keep the table.
