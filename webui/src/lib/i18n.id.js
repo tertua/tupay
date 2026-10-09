@@ -5,10 +5,11 @@ import { gatewayId } from "./i18n.id.gateway.js";
 import { uiId } from "./i18n.id.ui.js";
 import { subscriptionsId } from "./i18n.id.subscriptions.js";
 import { clientsId } from "./i18n.id.clients.js";
+import { invoiceId } from "./i18n.id.invoice.js";
 import { adminId } from "./i18n.id.admin.js";
 export const id = {
     ...settingsId,
-    ...uiId, ...subscriptionsId, ...clientsId, ...adminId,
+    ...uiId, ...subscriptionsId, ...clientsId, ...invoiceId, ...adminId,
     /* ============================ common ============================ */
     "app.tagline": "Manajer Faktur & Penagihan AI",
     "common.loading": "Memuat...",
@@ -356,37 +357,6 @@ export const id = {
     "invoices.confirmDelete": "Hapus faktur {number}? Tindakan ini tidak dapat dibatalkan.",
     "invoices.editTitle": "Edit",
     "invoices.deleteTitle": "Hapus",
-
-    /* ============================ invoice detail ============================ */
-    "invDetail.notFound": "Faktur tidak ditemukan",
-    "invDetail.deleted": "Mungkin sudah dihapus.",
-    "invDetail.markAs": "Tandai sebagai:",
-    "invDetail.confirmMarkAs": "Ubah faktur {number} menjadi {status}?",
-    "invDetail.confirmDelete": "Hapus faktur {number}?",
-    "invDetail.billTo": "Ditagih ke",
-    "invDetail.issued": "Diterbitkan",
-    "invDetail.due": "Jatuh tempo",
-    "invDetail.viewProfile": "Lihat profil",
-    "invDetail.aiReminder": "Pengingat Pembayaran AI",
-    "invDetail.reminderDesc": "Buat draf email pengingat sesuai tingkat keterlambatan faktur.",
-    "invDetail.toneFriendly": "Ramah",
-    "invDetail.toneFirm": "Tegas",
-    "invDetail.toneFinal": "Peringatan terakhir",
-    "invDetail.generateDraft": "Buat draf",
-    "invDetail.regenerate": "Buat ulang",
-    "invDetail.copied": "Tersalin",
-    "invDetail.copy": "Salin",
-    "invDetail.generateFailed": "Gagal membuat pengingat",
-    "invDetail.taxLine": "Pajak ({n}%)",
-    "invDetail.payments": "Pembayaran",
-    "invDetail.paidAmount": "Dibayar",
-    "invDetail.balanceDue": "Sisa tagihan",
-    "invDetail.recordPayment": "Catat pembayaran",
-    "invDetail.noPayments": "Belum ada pembayaran tercatat",
-    "invDetail.paidInFull": "Lunas",
-    "invDetail.paidLocked": "Lunas — terkunci",
-    "invDetail.paidLockedDesc": "Faktur ini sudah lunas. Edit, ubah status, dan hapus dikunci.",
-    "invDetail.manuallyPaidDesc": "Faktur ini ditandai lunas. Kembalikan status ke Terkirim untuk mengeditnya.",
 
     /* ============================ invoice editor ============================ */
     "invEditor.editTitle": "Edit faktur",

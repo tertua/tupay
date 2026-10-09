@@ -5,10 +5,11 @@ import { gatewayEn } from "./i18n.en.gateway.js";
 import { uiEn } from "./i18n.en.ui.js";
 import { subscriptionsEn } from "./i18n.en.subscriptions.js";
 import { clientsEn } from "./i18n.en.clients.js";
+import { invoiceEn } from "./i18n.en.invoice.js";
 import { adminEn } from "./i18n.en.admin.js";
 export const en = {
     ...settingsEn,
-    ...uiEn, ...subscriptionsEn, ...clientsEn, ...adminEn,
+    ...uiEn, ...subscriptionsEn, ...clientsEn, ...invoiceEn, ...adminEn,
     /* ============================ common ============================ */
     "app.tagline": "AI Invoice & Billing Manager",
     "common.loading": "Loading...",
@@ -356,37 +357,6 @@ export const en = {
     "invoices.confirmDelete": "Delete invoice {number}? This cannot be undone.",
     "invoices.editTitle": "Edit",
     "invoices.deleteTitle": "Delete",
-
-    /* ============================ invoice detail ============================ */
-    "invDetail.notFound": "Invoice not found",
-    "invDetail.deleted": "It may have been deleted.",
-    "invDetail.markAs": "Mark as:",
-    "invDetail.confirmMarkAs": "Change invoice {number} to {status}?",
-    "invDetail.confirmDelete": "Delete invoice {number}?",
-    "invDetail.billTo": "Bill To",
-    "invDetail.issued": "Issued",
-    "invDetail.due": "Due",
-    "invDetail.viewProfile": "View profile",
-    "invDetail.aiReminder": "AI Payment Reminder",
-    "invDetail.reminderDesc": "Draft a reminder email tuned to how overdue this invoice is.",
-    "invDetail.toneFriendly": "Friendly",
-    "invDetail.toneFirm": "Firm",
-    "invDetail.toneFinal": "Final notice",
-    "invDetail.generateDraft": "Generate draft",
-    "invDetail.regenerate": "Regenerate",
-    "invDetail.copied": "Copied",
-    "invDetail.copy": "Copy",
-    "invDetail.generateFailed": "Couldn't generate reminder",
-    "invDetail.taxLine": "Tax ({n}%)",
-    "invDetail.payments": "Payments",
-    "invDetail.paidAmount": "Paid",
-    "invDetail.balanceDue": "Balance due",
-    "invDetail.recordPayment": "Record payment",
-    "invDetail.noPayments": "No payments recorded yet",
-    "invDetail.paidInFull": "Paid in full",
-    "invDetail.paidLocked": "Paid — locked",
-    "invDetail.paidLockedDesc": "This invoice is paid. Editing, status changes and delete are locked. Void a payment to reopen it.",
-    "invDetail.manuallyPaidDesc": "This invoice is marked as paid. Change status back to Sent to edit it.",
 
     /* ============================ invoice editor ============================ */
     "invEditor.editTitle": "Edit invoice",
