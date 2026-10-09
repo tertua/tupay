@@ -162,6 +162,7 @@
  "platform/mail/mailer.go": 172,
  "platform/mail/mailer_test.go": 34,
  "platform/mail/templates.go": 31,
+ "platform/mail/templates_invoice_send_test.go": 41,
  "platform/mail/templates_test.go": 61,
  "platform/midtrans/gateway.go": 54,
  "platform/midtrans/snap.go": 121,
