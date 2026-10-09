@@ -24,5 +24,4 @@ export const paymentsApi = {
       })
       .then((r) => r.data?.payment),
   createOnlineLink: (invoiceId) => apiClient.post("/payments/online", { invoiceId }).then((r) => r.data),
-  sendOnlineLink: (invoiceId, email) => apiClient.post("/payments/online/send", { invoiceId, email }).then((r) => r.data),
 };

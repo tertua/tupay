@@ -5,7 +5,6 @@ import {
   Trash2,
   Copy,
   Check,
-  Mail,
   Plus,
   Wallet,
   Link2,
@@ -44,10 +43,6 @@ export function InvoicePaymentCard({ invoice }) {
   const [shareErr, setShareErr] = useState("");
   const [linkCopied, setLinkCopied] = useState(false);
   const [voidTarget, setVoidTarget] = useState(null);
-  const [email, setEmail] = useState(invoice.client_email || "");
-  const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
-  const [sendErr, setSendErr] = useState("");
   const canShareOnline = balance > 0 && invoice.effective_status !== "draft" && invoice.effective_status !== "pending" && currency === "IDR";
   const showIdrHint = balance > 0 && invoice.effective_status !== "draft" && currency !== "IDR" && !shareLink;
   const shareUrl = shareLink ? new URL(shareLink.url, window.location.origin).href : "";
@@ -55,9 +50,6 @@ export function InvoicePaymentCard({ invoice }) {
   useEffect(() => {
     if (invoice.payment_link) setShareLink(invoice.payment_link);
   }, [invoice.payment_link]);
-  useEffect(() => {
-    setEmail(invoice.client_email || "");
-  }, [invoice.client_email]);
 
   async function onVoid(reason) {
     if (!voidTarget) return;
@@ -77,21 +69,6 @@ export function InvoicePaymentCard({ invoice }) {
       if (e.status !== 401) setShareErr(e.message || t("payments.saveFailed"));
     } finally {
       setShareLoading(false);
-    }
-  }
-
-  async function onSendLink() {
-    if (sending || !email.trim() || !shareLink) return;
-    setSending(true);
-    setSendErr("");
-    setSent(false);
-    try {
-      await paymentsApi.sendOnlineLink(invoice.id, email.trim());
-      setSent(true);
-    } catch (e) {
-      if (e.status !== 401) setSendErr(e.message || t("payments.saveFailed"));
-    } finally {
-      setSending(false);
     }
   }
 
@@ -168,25 +145,6 @@ export function InvoicePaymentCard({ invoice }) {
             <ExternalLink size={13} />
           </a>
           </div>
-          {!isPaid && (
-          <div className="mt-2 pt-2 border-t border-[var(--border)]">
-          <div className="flex items-center gap-3">
-              <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder={t("payments.onlineEmailPlaceholder")}
-                className="flex-1 min-w-0 h-8 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 text-xs text-[var(--ink)] outline-none focus:border-[var(--accent)]/50"
-              />
-              <Button variant="soft" size="sm" onClick={onSendLink} disabled={sending || !email.trim()}>
-                {sending ? <Loader2 size={12} className="animate-spin" /> : <Mail size={12} />}
-                {sending ? t("payments.onlineSending") : t("payments.onlineSend")}
-              </Button>
-            </div>
-            {sent && <p className="text-[11px] text-[var(--success)] mt-1.5">{t("payments.onlineSent")}</p>}
-            {sendErr && <p className="text-[11px] text-[var(--danger)] mt-1.5">{sendErr}</p>}
-          </div>
-          )}
         </div>
       )}
 
