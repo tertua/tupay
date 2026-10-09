@@ -2405,6 +2405,45 @@ paths:
       summary: reject invoice
       tags:
       - Invoices
+  /invoices/{id}/send-email:
+    post:
+      consumes:
+      - application/json
+      description: Email an invoice to its client.
+      parameters:
+      - description: Invoice ID
+        in: path
+        name: id
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "202":
+          description: Accepted
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: invoice not found
+          schema:
+            additionalProperties: true
+            type: object
+        "409":
+          description: client has no email
+          schema:
+            additionalProperties: true
+            type: object
+        "501":
+          description: email provider is not configured
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - SessionCookie: []
+      summary: send invoice via email
+      tags:
+      - Invoices
   /invoices/{id}/status:
     patch:
       consumes:

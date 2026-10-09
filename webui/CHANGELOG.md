@@ -14,6 +14,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   blocked. The client detail gains an overdue-only view, a "Send reminder"
   action that reuses the scheduled reminder outbox path, and a CSV statement
   export.
+- Send invoice by email: an owner-only button on the invoice detail emails the
+  invoice to its client through the mail outbox, using a dedicated invoice-send
+  template. Re-sending is allowed; drafts and clients without an email address
+  are rejected with a clear message.
 
 ## [v2.5.0] - 2026-10-08
 

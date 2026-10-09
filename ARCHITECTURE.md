@@ -324,6 +324,7 @@ Adding provider X touches only these files (nothing under `app/controllers/*`, `
 **Templates** (`platform/mail/templates/*.html`)
 - Password reset link
 - Payment link (invoice)
+- Invoice send (invoice)
 - Payment received notification
 
 ### File Storage
