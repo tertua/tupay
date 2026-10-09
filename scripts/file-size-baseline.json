@@ -95,6 +95,7 @@
  "pkg/routes/flow_client_invoice_test.go": 128,
  "pkg/routes/flow_expense_test.go": 67,
  "pkg/routes/flow_helpers_test.go": 75,
+ "pkg/routes/flow_invoice_send_email_test.go": 154,
  "pkg/routes/flow_misc_test.go": 97,
  "pkg/routes/flow_payment_test.go": 273,
  "pkg/routes/flow_report_test.go": 94,
