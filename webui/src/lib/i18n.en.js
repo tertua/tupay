@@ -5,9 +5,10 @@ import { gatewayEn } from "./i18n.en.gateway.js";
 import { uiEn } from "./i18n.en.ui.js";
 import { subscriptionsEn } from "./i18n.en.subscriptions.js";
 import { clientsEn } from "./i18n.en.clients.js";
+import { adminEn } from "./i18n.en.admin.js";
 export const en = {
     ...settingsEn,
-    ...uiEn, ...subscriptionsEn, ...clientsEn,
+    ...uiEn, ...subscriptionsEn, ...clientsEn, ...adminEn,
     /* ============================ common ============================ */
     "app.tagline": "AI Invoice & Billing Manager",
     "common.loading": "Loading...",
@@ -94,31 +95,6 @@ export const en = {
     "sidebar.settings": "Settings",
     "sidebar.logOut": "Log out",
     "sidebar.account": "Account",
-
-    /* ============================ admin ============================ */
-    "admin.console": "Admin/Console",
-    "admin.backToApp": "Back to app",
-    "admin.users": "Users",
-    "admin.gateway": "Gateway",
-    "admin.title": "Admin users",
-    "admin.desc": "Manage account roles and access across your workspace.",
-    "admin.user": "User",
-    "admin.role": "Role",
-    "admin.status": "Status",
-    "admin.statusActive": "Active",
-    "admin.statusBlocked": "Blocked",
-    "admin.joined": "Joined",
-    "admin.action": "Change role",
-    "admin.empty": "No users found",
-    "admin.emptyDesc": "There are no registered accounts to manage.",
-    "admin.loadFailed": "Couldn't load users",
-    "admin.roleUpdated": "User role updated",
-    "admin.roleUpdateFailed": "Couldn't update user role",
-    "admin.changeRoleFor": "Change role for {name}",
-    "admin.you": "You",
-    "admin.protected": "Protected",
-    "admin.role.admin": "Admin",
-    "admin.role.user": "User",
 
     ...gatewayEn,
 

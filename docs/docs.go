@@ -555,6 +555,37 @@ const docTemplate = `{
                 }
             }
         },
+        "/admin/users/{id}": {
+            "delete": {
+                "security": [
+                    {
+                        "SessionCookie": []
+                    }
+                ],
+                "description": "Delete a user account without invoice records.",
+                "tags": [
+                    "Admin"
+                ],
+                "summary": "delete a user",
+                "parameters": [
+                    {
+                        "type": "string",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "ok",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
         "/admin/users/{id}/role": {
             "patch": {
                 "security": [

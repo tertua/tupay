@@ -2,6 +2,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { AdminDenseCell, AdminDenseCellMuted, AdminDenseRow, AdminDenseTable } from "@/components/admin/AdminDenseTable";
 import { UserStatusButton } from "@/components/admin/UserStatusButton";
+import { UserDeleteButton } from "@/components/admin/UserDeleteButton";
 import { useLang } from "@/context/LangContext";
 import { useUpdateUserRole } from "@/hooks/useAdminUsers";
 import { formatDate } from "@/lib/utils";
@@ -62,6 +63,7 @@ function UserRow({ account, currentUserId }) {
         ) : (
           <div className="flex items-center justify-end gap-2">
             <UserStatusButton account={account} />
+            <UserDeleteButton account={account} />
             <select
               aria-label={t("admin.changeRoleFor", { name: account.name })}
               value={role}

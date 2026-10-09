@@ -107,3 +107,26 @@ func (q *UserQueries) GetPasswordReset(token string) (models.PasswordReset, erro
 func (q *UserQueries) DeletePasswordResetsByUser(userID uuid.UUID) error {
 	return q.Where("user_id = ?", userID).Delete(&models.PasswordReset{}).Error
 }
+
+// DeleteUserAccount removes a user and every row keyed to them (memberships,
+// external identities, email verifications, password resets) in one
+// transaction. Callers gate on CountInvoicesByUser first: invoice records
+// stay on the books even after their creator is gone, so a user with any
+// invoice record must never reach this delete.
+func (q *UserQueries) DeleteUserAccount(userID uuid.UUID) error {
+	return q.Transaction(func(tx *gorm.DB) error {
+		if err := tx.Where("user_id = ?", userID).Delete(&models.Membership{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("user_id = ?", userID).Delete(&models.UserIdentity{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("user_id = ?", userID).Delete(&models.EmailVerification{}).Error; err != nil {
+			return err
+		}
+		if err := tx.Where("user_id = ?", userID).Delete(&models.PasswordReset{}).Error; err != nil {
+			return err
+		}
+		return tx.Where("id = ?", userID).Delete(&models.User{}).Error
+	})
+}

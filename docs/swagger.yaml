@@ -1027,6 +1027,25 @@ paths:
       summary: list users
       tags:
       - Admin
+  /admin/users/{id}:
+    delete:
+      description: Delete a user account without invoice records.
+      parameters:
+      - description: User ID
+        in: path
+        name: id
+        required: true
+        type: string
+      responses:
+        "204":
+          description: ok
+          schema:
+            type: string
+      security:
+      - SessionCookie: []
+      summary: delete a user
+      tags:
+      - Admin
   /admin/users/{id}/role:
     patch:
       consumes:

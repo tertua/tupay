@@ -5,9 +5,10 @@ import { gatewayId } from "./i18n.id.gateway.js";
 import { uiId } from "./i18n.id.ui.js";
 import { subscriptionsId } from "./i18n.id.subscriptions.js";
 import { clientsId } from "./i18n.id.clients.js";
+import { adminId } from "./i18n.id.admin.js";
 export const id = {
     ...settingsId,
-    ...uiId, ...subscriptionsId, ...clientsId,
+    ...uiId, ...subscriptionsId, ...clientsId, ...adminId,
     /* ============================ common ============================ */
     "app.tagline": "Manajer Faktur & Penagihan AI",
     "common.loading": "Memuat...",
@@ -94,31 +95,6 @@ export const id = {
     "sidebar.settings": "Setelan",
     "sidebar.logOut": "Keluar",
     "sidebar.account": "Akun",
-
-    /* ============================ admin ============================ */
-    "admin.console": "Admin/Console",
-    "admin.backToApp": "Kembali ke aplikasi",
-    "admin.users": "Pengguna",
-    "admin.gateway": "Gateway",
-    "admin.title": "Akun Pengguna",
-    "admin.desc": "Kelola peran dan akses akun di seluruh ruang kerja Anda.",
-    "admin.user": "Pengguna",
-    "admin.role": "Peran",
-    "admin.status": "Status",
-    "admin.statusActive": "Aktif",
-    "admin.statusBlocked": "Diblokir",
-    "admin.joined": "Bergabung",
-    "admin.action": "Ubah peran",
-    "admin.empty": "Pengguna tidak ditemukan",
-    "admin.emptyDesc": "Belum ada akun terdaftar untuk dikelola.",
-    "admin.loadFailed": "Gagal memuat pengguna",
-    "admin.roleUpdated": "Peran pengguna diperbarui",
-    "admin.roleUpdateFailed": "Gagal memperbarui peran pengguna",
-    "admin.changeRoleFor": "Ubah peran {name}",
-    "admin.you": "Anda",
-    "admin.protected": "Dilindungi",
-    "admin.role.admin": "Admin",
-    "admin.role.user": "Pengguna",
 
     ...gatewayId,
 

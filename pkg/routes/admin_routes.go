@@ -12,6 +12,7 @@ func registerAdminRoutes(a *fiber.App, prefix string) {
 	admin.Get("/users", controllers.ListUsers)
 	admin.Patch("/users/:id/role", controllers.UpdateUserRole)
 	admin.Patch("/users/:id/status", controllers.UpdateUserStatus)
+	admin.Delete("/users/:id", controllers.DeleteUser)
 	admin.Get("/audit-logs", controllers.ListAuditLogs)
 	admin.Post("/orgs", controllers.CreateOrg)
 	admin.Post("/migrate/down", controllers.MigrateDown)
