@@ -21,6 +21,8 @@
  "app/controllers/invoice_delete_controller.go": 70,
  "app/controllers/invoice_update_controller.go": 98,
  "app/controllers/invoice_status_controller.go": 86,
+ "app/controllers/invoice_send_email_controller.go": 133,
+ "app/controllers/invoice_send_email_controller_test.go": 172,
  "app/controllers/item_controller.go": 172,
  "app/controllers/notification_controller.go": 388,
  "app/controllers/notification_helper.go": 44,
