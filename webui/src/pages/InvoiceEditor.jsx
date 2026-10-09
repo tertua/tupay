@@ -46,7 +46,8 @@ export default function InvoiceEditor() {
   const [searchParams] = useSearchParams();
   const preselectClient = searchParams.get("client") || "";
 
-  const { data: clients } = useClients();
+  const { data: clientsData } = useClients();
+  const clients = clientsData?.clients || [];
   const { data: settings } = useSettings();
   const { data: existing, isLoading: loadingInvoice, error: invoiceError } = useInvoice(id);
   const create = useCreateInvoice();

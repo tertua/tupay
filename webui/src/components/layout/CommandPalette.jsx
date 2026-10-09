@@ -48,7 +48,7 @@ export function CommandPalette({ open, onClose }) {
   const listRef = useRef(null);
 
   const { data: invoices } = useInvoices();
-  const { data: clients } = useClients();
+  const { data: clientsData } = useClients();
 
   useEffect(() => {
     if (open) {
@@ -69,7 +69,7 @@ export function CommandPalette({ open, onClose }) {
       to: `/invoices/${i.id}`,
       icon: FileText,
     }));
-    const clientItems = (clients || []).map((c) => ({
+    const clientItems = (clientsData?.clients || []).map((c) => ({
       id: `client:${c.id}`,
       kind: "client",
       label: c.name,
@@ -86,7 +86,7 @@ export function CommandPalette({ open, onClose }) {
       .filter((x) => x.score > 0)
       .sort((a, b) => b.score - a.score)
       .map((x) => x.it);
-  }, [invoices, clients, query, t]);
+  }, [invoices, clientsData, query, t]);
 
   useEffect(() => setActiveIdx(0), [query]);
 

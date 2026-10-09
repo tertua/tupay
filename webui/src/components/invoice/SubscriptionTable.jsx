@@ -14,8 +14,9 @@ const SUBSCRIPTION_STATUS = {
 
 export function SubscriptionTable({ subscriptions, onEdit, onToggle, onDelete }) {
   const { t } = useLang();
-  const { data: clients } = useClients();
-  const clientName = (id) => (clients || []).find((c) => c.id === id)?.name;
+  const { data: clientsData } = useClients();
+  const clients = clientsData?.clients || [];
+  const clientName = (id) => clients.find((c) => c.id === id)?.name;
 
   return (
     <Card padding="none" className="overflow-hidden">

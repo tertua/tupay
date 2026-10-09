@@ -23,7 +23,8 @@ const INVOICE_STATUSES = ["draft", "sent"];
 export function SubscriptionForm({ subscription, onDone, onCancel }) {
   const isEdit = !!subscription;
   const { t } = useLang();
-  const { data: clients } = useClients();
+  const { data: clientsData } = useClients();
+  const clients = clientsData?.clients || [];
   const create = useCreateSubscription();
   const update = useUpdateSubscription();
   const [form, setForm] = useState(null);
