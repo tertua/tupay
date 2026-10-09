@@ -1,4 +1,4 @@
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   Pencil,
@@ -8,7 +8,6 @@ import {
   Undo2,
   Mail,
 } from "lucide-react";
-import { Card, CardTitle } from "@/components/ui/Card";
 import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
@@ -17,6 +16,8 @@ import { InvoicePreview } from "@/components/invoice/InvoicePreview";
 import { InvoicePaymentCard } from "@/components/invoice/InvoicePaymentCard";
 import { InvoiceReminderCard } from "@/components/invoice/InvoiceReminderCard";
 import { InvoiceStatusActions } from "@/components/invoice/InvoiceStatusActions";
+import { InvoiceSendEmailButton } from "@/components/invoice/InvoiceSendEmailButton";
+import { InvoiceStatusButton, InvoiceClientCard } from "@/components/invoice/InvoiceDetailParts";
 import {
   useInvoice,
   useSetInvoiceStatus,
@@ -24,7 +25,7 @@ import {
 } from "@/hooks/useInvoices";
 import { useSettings } from "@/hooks/useSettings";
 import { useLang } from "@/context/LangContext";
-import { formatMoney, cn } from "@/lib/utils";
+import { formatMoney } from "@/lib/utils";
 
 export default function InvoiceDetail() {
   const { id } = useParams();
@@ -94,6 +95,7 @@ export default function InvoiceDetail() {
 
         <div className="flex items-center gap-2 flex-wrap">
           <InvoicePdfDownload invoice={invoice} settings={settings} lang={lang} label="PDF" />
+          <InvoiceSendEmailButton invoice={invoice} />
           {canEdit && (
           <Button variant="outline" onClick={() => nav(`/invoices/${id}/edit`)}>
             <Pencil size={15} /> {t("common.edit")}
@@ -128,13 +130,13 @@ export default function InvoiceDetail() {
       {lockStatus || st === "pending" ? null : (
       <div className="flex items-center gap-2 mb-6 flex-wrap">
         <span className="text-xs text-[var(--ink-muted)] mr-1">{t("invDetail.markAs")}</span>
-        <StatusButton
+        <InvoiceStatusButton
           active={invoice.status === "draft"}
           onClick={() => { if (window.confirm(t("invDetail.confirmMarkAs", { number: invoice.invoice_number, status: t("status.draft") }))) setStatus.mutate({ id, status: "draft" }); }}
           icon={Undo2}
           label={t("status.draft")}
         />
-        {invoice.client_id ? <StatusButton
+        {invoice.client_id ? <InvoiceStatusButton
           active={invoice.status === "sent"}
           onClick={() => { if (window.confirm(t("invDetail.confirmMarkAs", { number: invoice.invoice_number, status: t("status.sent") }))) setStatus.mutate({ id, status: "sent" }); }}
           icon={Send}
@@ -154,54 +156,9 @@ export default function InvoiceDetail() {
         <div className="space-y-5">
           <InvoicePaymentCard invoice={invoice} />
           {!isPaid && st !== "pending" && <InvoiceReminderCard invoiceId={id} />}
-          <ClientCard invoice={invoice} />
+          <InvoiceClientCard invoice={invoice} />
         </div>
       </div>
     </div>
-  );
-}
-
-function StatusButton({ active, onClick, icon: Icon, label, tone }) {
-  return (
-    <button type="button"
-      onClick={onClick}
-      className={cn(
-        "inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-xs font-semibold border transition-colors",
-        active
-          ? tone === "success"
-            ? "bg-[var(--success)]/12 text-[var(--success)] border-transparent"
-            : "bg-[var(--ink)] text-[var(--bg)] border-transparent"
-          : "bg-[var(--surface)] text-[var(--ink-muted)] border-[var(--border)] hover:text-[var(--ink)]"
-      )}
-    >
-      <Icon size={13} />
-      {label}
-    </button>
-  );
-}
-
-function ClientCard({ invoice }) {
-  const { t } = useLang();
-  if (!invoice.client_id) return null;
-  return (
-    <Card padding="lg">
-      <CardTitle className="mb-3">{t("common.client")}</CardTitle>
-      <Link
-        to={`/clients/${invoice.client_id}`}
-        className="flex items-center gap-3 group"
-      >
-        <div className="h-10 w-10 rounded-full bg-[var(--accent-soft)] text-[var(--accent-strong)] flex items-center justify-center font-semibold">
-          {invoice.client_name?.[0]?.toUpperCase() || "?"}
-        </div>
-        <div className="min-w-0">
-          <div className="text-sm font-semibold text-[var(--ink)] group-hover:text-[var(--accent-strong)] truncate">
-            {invoice.client_name}
-          </div>
-          <div className="text-xs text-[var(--ink-muted)] truncate">
-            {invoice.client_email || invoice.client_company || t("invDetail.viewProfile")}
-          </div>
-        </div>
-      </Link>
-    </Card>
   );
 }
