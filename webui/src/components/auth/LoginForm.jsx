@@ -91,7 +91,7 @@ export function LoginForm({ login, nav, location, sessionExpired, clearSessionEx
           value={form.email}
           onChange={(v) => setForm((current) => ({ ...current, email: v }))}
           icon={Mail}
-          placeholder="email"
+          placeholder={t("common.email")}
         />
 
         <AuthField
@@ -101,7 +101,7 @@ export function LoginForm({ login, nav, location, sessionExpired, clearSessionEx
           value={form.password}
           onChange={(v) => setForm((current) => ({ ...current, password: v }))}
           icon={Lock}
-          placeholder="password"
+          placeholder={t("common.password")}
           extra={
             <Link to="/forgot-password" className="text-xs text-[var(--accent-strong)] font-semibold hover:underline">
               {t("auth.forgot")}

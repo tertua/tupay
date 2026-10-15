@@ -96,6 +96,7 @@ export default function ResetPassword() {
               autoComplete="new-password"
               value={form.confirm}
               onChange={(v) => setForm({ ...form, confirm: v })}
+              placeholder={t("auth.confirmPassword")}
               icon={Lock}
             />
 

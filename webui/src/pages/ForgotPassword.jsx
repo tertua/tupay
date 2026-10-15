@@ -80,6 +80,7 @@ export default function ForgotPassword() {
               value={email}
               onChange={setEmail}
               icon={Mail}
+              placeholder={t("common.email")}
             />
 
             <AuthErrorBanner>{err}</AuthErrorBanner>

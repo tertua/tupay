@@ -92,3 +92,11 @@ test("Login shows no SSO error without the query param", () => {
   const html = renderAt("/login");
   assert.doesNotMatch(html, /kedaluwarsa/i);
 });
+
+test("Login placeholders come from i18n, not hardcoded English", () => {
+  const html = renderAt("/login");
+  assert.match(html, /placeholder="Email"/);
+  assert.match(html, /placeholder="Password"/);
+  assert.doesNotMatch(html, /placeholder="email"/);
+  assert.doesNotMatch(html, /placeholder="password"/);
+});
