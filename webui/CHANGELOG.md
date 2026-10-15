@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [v2.5.1] - 2026-10-15
+
 ### Added
 - Client receivables tooling: the clients list is now server-driven (search,
   lifecycle status, sort, pagination), clients can be archived/unarchived, an
@@ -18,6 +20,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   invoice to its client through the mail outbox, using a dedicated invoice-send
   template. Re-sending is allowed; drafts and clients without an email address
   are rejected with a clear message.
+
+### Changed
+- Admins can delete a user account (`DELETE /admin/users/:id`) when that user
+  has no invoice records — any invoice row blocks the delete with 409.
+  Memberships, identities, verifications and password resets are removed and
+  the session revoked in one transaction, from a new delete action in the
+  admin table.
 
 ## [v2.5.0] - 2026-10-08
 
