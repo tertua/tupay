@@ -16,7 +16,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/minio/minio-go/v7 v7.4.1
 	github.com/redis/go-redis/v9 v9.23.0
-	github.com/shopspring/decimal v1.5.0
+	github.com/shopspring/decimal v1.6.0
 	github.com/stretchr/testify v1.12.1
 	github.com/swaggo/swag v1.16.6
 	golang.org/x/crypto v0.58.0
