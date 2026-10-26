@@ -10,7 +10,7 @@ import (
 
 // refreshTokenPattern pins the shape consumers depend on: 64 hex chars, a dot,
 // then the unix expiry.
-var refreshTokenPattern = regexp.MustCompile(`^[0-9a-f]{64}\.[0-9]+$`)
+var refreshTokenPattern = regexp.MustCompile(`^[0-9a-f]{64}\.\d+$`)
 
 // TestGenerateNewRefreshTokenUnique proves two mints never collide (the token is
 // drawn from the CSPRNG, not derived from the clock).

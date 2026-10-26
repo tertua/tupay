@@ -42,7 +42,7 @@ func normalizeUserEmails(db *gorm.DB) error {
 	if err != nil {
 		return err
 	}
-	defer rows.Close()
+	defer func() { _ = rows.Close() }()
 
 	var duplicates []string
 	for rows.Next() {

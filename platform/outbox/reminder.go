@@ -124,12 +124,13 @@ func sendReminderMail(db *database.Queries, row models.ClientReminderRow, kind s
 
 // reminderCopy builds the reminder subject and rendered HTML body for a leg,
 // using the invoice's public pay link when one exists.
-func reminderCopy(row models.ClientReminderRow, kind string) (string, string) {
-	subject := "Payment reminder for invoice " + row.InvoiceNumber
+func reminderCopy(row models.ClientReminderRow, kind string) (subject, body string) {
+	subject = "Payment reminder for invoice " + row.InvoiceNumber
 	if kind == models.InvoiceReminderKindAfter {
 		subject = "Overdue: invoice " + row.InvoiceNumber
 	}
-	body, err := mail.Render("reminder", mail.TemplateData{
+	var err error
+	body, err = mail.Render("reminder", mail.TemplateData{
 		AppName:       configs.Get().AppName,
 		InvoiceNumber: row.InvoiceNumber,
 		URL:           invoicePayURL(row),
@@ -241,7 +242,7 @@ func reminderPayload(row models.ClientReminderRow, kind string) string {
 
 // trimSlash removes one trailing slash from a URL base.
 func trimSlash(s string) string {
-	if len(s) > 0 && s[len(s)-1] == '/' {
+	if s != "" && s[len(s)-1] == '/' {
 		return s[:len(s)-1]
 	}
 	return s

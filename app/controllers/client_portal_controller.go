@@ -33,8 +33,8 @@ func GetPublicClient(c fiber.Ctx) error {
 		return utils.Fail(c, fiber.StatusNotFound, "client link not found", nil)
 	}
 
-	cap := queries.ClientPortalPaymentCap()
-	rows, err := db.ClientPortalInvoices(link.OrgID, link.ClientID, cap)
+	payCap := queries.ClientPortalPaymentCap()
+	rows, err := db.ClientPortalInvoices(link.OrgID, link.ClientID, payCap)
 	if err != nil {
 		return utils.Fail(c, fiber.StatusInternalServerError, "failed to load client invoices", nil)
 	}
@@ -62,7 +62,7 @@ func GetPublicClient(c fiber.Ctx) error {
 		})
 	}
 
-	paymentRows, err := db.ClientPortalPayments(link.OrgID, link.ClientID, cap)
+	paymentRows, err := db.ClientPortalPayments(link.OrgID, link.ClientID, payCap)
 	if err != nil {
 		return utils.Fail(c, fiber.StatusInternalServerError, "failed to load client payments", nil)
 	}
