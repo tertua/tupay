@@ -104,7 +104,7 @@ func SendInvoiceEmail(c fiber.Ctx) error {
 // ("", 0, "", nil) when the client has a usable address; otherwise the status,
 // message and details for utils.Fail: 409 when the client has no email, 404
 // when the client row vanished, 500 on a load error.
-func invoiceRecipient(db database.Queries, orgID uuid.UUID, inv models.Invoice) (string, int, string, fiber.Map) {
+func invoiceRecipient(db database.Queries, orgID uuid.UUID, inv models.Invoice) (email string, status int, msg string, details fiber.Map) {
 	if inv.ClientID == nil {
 		return "", fiber.StatusConflict, "client has no email", fiber.Map{"client_id": nil}
 	}

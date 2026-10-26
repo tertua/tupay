@@ -76,10 +76,10 @@ func TestSubscriptionRunDue(t *testing.T) {
 
 // seedSubscriptionOrg creates an org with an owner, a client, and one active
 // monthly subscription due today, returning the org id and subscription id.
-func seedSubscriptionOrg(t *testing.T, tweak func(*models.Subscription)) (uuid.UUID, uuid.UUID) {
+func seedSubscriptionOrg(t *testing.T, tweak func(*models.Subscription)) (orgID, subscriptionID uuid.UUID) {
 	t.Helper()
 	owner := uuid.New()
-	orgID := uuid.New()
+	orgID = uuid.New()
 	now := time.Now()
 	require.NoError(t, rawDB(t).Create(&models.User{ID: owner, Name: "Owner", Email: "owner-" + owner.String()[:8] + "@x.com",
 		PasswordHash: "hash", UserStatus: 1, UserRole: "user", CreatedAt: now, UpdatedAt: now}).Error)

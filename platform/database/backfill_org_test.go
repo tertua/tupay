@@ -107,9 +107,9 @@ func TestBackfillStampsGatewayProjectFromOwner(t *testing.T) {
 }
 
 // staffOnlyUser seeds a user whose only membership is staff in a foreign org, the shape an invited teammate has.
-func staffOnlyUser(t *testing.T, db *gorm.DB, email string) (models.User, uuid.UUID) {
+func staffOnlyUser(t *testing.T, db *gorm.DB, email string) (user models.User, hostOrgID uuid.UUID) {
 	t.Helper()
-	user := models.User{ID: uuid.New(), Name: "Invited Staff", Email: email, PasswordHash: "hash", UserStatus: 1, UserRole: "user"}
+	user = models.User{ID: uuid.New(), Name: "Invited Staff", Email: email, PasswordHash: "hash", UserStatus: 1, UserRole: "user"}
 	if err := db.Create(&user).Error; err != nil {
 		t.Fatalf("expected staff user, got: %v", err)
 	}

@@ -40,7 +40,7 @@ func (q *ClientQueries) filteredClients(orgID uuid.UUID, status, search string) 
 // clientAggregateJoins builds the LEFT JOIN subqueries that compute each
 // client's billed total and paid amount, so both stay consistent with
 // dashboard/reports.
-func (q *ClientQueries) clientAggregateJoins(orgID uuid.UUID) (*gorm.DB, *gorm.DB) {
+func (q *ClientQueries) clientAggregateJoins(orgID uuid.UUID) (billed, paid *gorm.DB) {
 	// Billed invoices are sent + paid; drafts are not billed yet. A draft
 	// with money in flight (pending) still owes, so it is billed too,
 	// matching dashboard/reports. Paid must stay in total_billed so

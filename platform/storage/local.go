@@ -53,7 +53,7 @@ func (s *localStorage) Put(_ context.Context, key string, data io.Reader, _ int6
 	return err
 }
 
-func (s *localStorage) Get(_ context.Context, key string) (io.ReadCloser, string, error) {
+func (s *localStorage) Get(_ context.Context, key string) (rc io.ReadCloser, contentType string, err error) {
 	path, err := s.path(key)
 	if err != nil {
 		return nil, "", err

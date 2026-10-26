@@ -78,7 +78,7 @@ func systemOrgID(db *gorm.DB) (uuid.UUID, error) {
 }
 
 // ownerOrgFor resolves the user's owner membership, creating a personal org + owner membership when they have none yet.
-func ownerOrgFor(db *gorm.DB, user models.User) (uuid.UUID, bool, error) {
+func ownerOrgFor(db *gorm.DB, user models.User) (orgID uuid.UUID, created bool, err error) {
 	var memberships int64
 	if err := db.Model(&models.Membership{}).Where("user_id = ?", user.ID).Count(&memberships).Error; err != nil {
 		return uuid.Nil, false, err
@@ -87,7 +87,7 @@ func ownerOrgFor(db *gorm.DB, user models.User) (uuid.UUID, bool, error) {
 		return createPersonalOrg(db, user)
 	}
 	var owner models.Membership
-	err := db.Where("user_id = ? AND role = ?", user.ID, models.RoleOwner).Order("created_at, id").First(&owner).Error
+	err = db.Where("user_id = ? AND role = ?", user.ID, models.RoleOwner).Order("created_at, id").First(&owner).Error
 	if errors.Is(err, gorm.ErrRecordNotFound) {
 		// Staff-only: stamping runs per user_id, so no other user's pass covers
 		// these rows. If unstamped legacy rows exist, mint them a personal org so
@@ -105,11 +105,11 @@ func ownerOrgFor(db *gorm.DB, user models.User) (uuid.UUID, bool, error) {
 }
 
 // createPersonalOrg provisions the user's personal owner org + membership in one transaction (both rows or neither).
-func createPersonalOrg(db *gorm.DB, user models.User) (uuid.UUID, bool, error) {
+func createPersonalOrg(db *gorm.DB, user models.User) (orgID uuid.UUID, created bool, err error) {
 	org := models.Organization{ID: uuid.New(), Name: defaultOrgName(user)}
 	membership := models.Membership{ID: uuid.New(), OrgID: org.ID, UserID: user.ID, Role: models.RoleOwner}
 	// Both rows or neither: a lone org would strand the user with an owner membership pointing at nothing.
-	err := db.Transaction(func(tx *gorm.DB) error {
+	err = db.Transaction(func(tx *gorm.DB) error {
 		if err := tx.Create(&org).Error; err != nil {
 			return err
 		}

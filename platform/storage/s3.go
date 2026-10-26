@@ -52,7 +52,7 @@ func (s *s3Storage) Put(ctx context.Context, key string, data io.Reader, size in
 	return err
 }
 
-func (s *s3Storage) Get(ctx context.Context, key string) (io.ReadCloser, string, error) {
+func (s *s3Storage) Get(ctx context.Context, key string) (rc io.ReadCloser, contentType string, err error) {
 	obj, err := s.client.GetObject(ctx, s.bucket, key, minio.GetObjectOptions{})
 	if err != nil {
 		return nil, "", err

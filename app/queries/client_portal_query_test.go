@@ -32,7 +32,7 @@ func seedPortalClient(t *testing.T, db *gorm.DB, orgID uuid.UUID) uuid.UUID {
 	return clientID
 }
 
-func seedPortalInvoice(t *testing.T, db *gorm.DB, orgID, clientID uuid.UUID, status string, total string) uuid.UUID {
+func seedPortalInvoice(t *testing.T, db *gorm.DB, orgID, clientID uuid.UUID, status, total string) uuid.UUID {
 	t.Helper()
 	invoiceID := uuid.New()
 	require.NoError(t, db.Create(&models.Invoice{

@@ -173,9 +173,9 @@ func fetchLocation(resp *http.Response) string {
 // oidcStart performs GET /api/auth/oidc/login and returns the provider
 // redirect's parsed query so callers can read the state and nonce the server
 // stored for exactly that attempt.
-func oidcStart(t *testing.T, app *fiber.App) (*http.Response, url.Values) {
+func oidcStart(t *testing.T, app *fiber.App) (resp *http.Response, query url.Values) {
 	t.Helper()
-	resp := doRequest(t, app, "GET", "/api/auth/oidc/login", "", nil)
+	resp = doRequest(t, app, "GET", "/api/auth/oidc/login", "", nil)
 	loc := fetchLocation(resp)
 	u, err := url.Parse(loc)
 	require.NoError(t, err)

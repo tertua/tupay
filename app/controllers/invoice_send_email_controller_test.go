@@ -31,13 +31,13 @@ func sendEmailTestApp(userID, orgID uuid.UUID, role string) *fiber.App {
 }
 
 // sendEmail performs a POST and returns status + decoded JSON body.
-func sendEmail(t *testing.T, app *fiber.App, route string) (int, map[string]any) {
+func sendEmail(t *testing.T, app *fiber.App, route string) (status int, body map[string]any) {
 	t.Helper()
 	req := httptest.NewRequest(http.MethodPost, route, strings.NewReader(""))
 	resp, err := app.Test(req, fiber.TestConfig{Timeout: 0, FailOnTimeout: false})
 	require.NoError(t, err)
 	defer resp.Body.Close()
-	body := map[string]any{}
+	body = map[string]any{}
 	_ = json.NewDecoder(resp.Body).Decode(&body)
 	return resp.StatusCode, body
 }

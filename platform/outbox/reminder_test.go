@@ -63,10 +63,10 @@ func TestReminderLegDisabled(t *testing.T) {
 
 // seedReminderOrg creates an org with one owner, settings, and returns the org,
 // user, and a sent invoice due offset days from today.
-func seedReminderOrg(t *testing.T, dueOffset int, tweak func(*models.Settings)) (uuid.UUID, uuid.UUID, uuid.UUID) {
+func seedReminderOrg(t *testing.T, dueOffset int, tweak func(*models.Settings)) (orgID, ownerID, invoiceID uuid.UUID) {
 	t.Helper()
 	owner := uuid.New()
-	orgID := uuid.New()
+	orgID = uuid.New()
 	now := time.Now()
 	require.NoError(t, rawDB(t).Create(&models.User{ID: owner, Name: "Owner", Email: "owner-" + owner.String()[:8] + "@x.com",
 		PasswordHash: "hash", UserStatus: 1, UserRole: "user", CreatedAt: now, UpdatedAt: now}).Error)

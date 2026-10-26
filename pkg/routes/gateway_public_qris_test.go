@@ -19,10 +19,10 @@ import (
 // bumps the counter and returns its own QR image URL, so a test can tell a
 // reused intent (one charge) from a regenerated one (a fresh charge). expiry
 // is Midtrans' WIB shape ("2006-01-02 15:04:05").
-func newQRISCoreStub(t *testing.T, expiry string) (*httptest.Server, *atomic.Int32) {
+func newQRISCoreStub(t *testing.T, expiry string) (srv *httptest.Server, calls *atomic.Int32) {
 	t.Helper()
-	calls := &atomic.Int32{}
-	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	calls = &atomic.Int32{}
+	srv = httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		n := calls.Add(1)
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = fmt.Fprintf(w,

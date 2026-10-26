@@ -48,7 +48,7 @@ func accessTokenString(c fiber.Ctx) string {
 }
 
 // validAccessToken parses and validates an access token.
-func validAccessToken(tokenString string) (uuid.UUID, string, bool) {
+func validAccessToken(tokenString string) (userID uuid.UUID, sid string, ok bool) {
 	if tokenString == "" {
 		return uuid.Nil, "", false
 	}
@@ -67,13 +67,13 @@ func validAccessToken(tokenString string) (uuid.UUID, string, bool) {
 	if !ok {
 		return uuid.Nil, "", false
 	}
-	userID, err := uuid.Parse(rawID)
+	parsedID, err := uuid.Parse(rawID)
 	if err != nil {
 		return uuid.Nil, "", false
 	}
 
-	sid, _ := claims["sid"].(string)
-	return userID, sid, true
+	sid, _ = claims["sid"].(string)
+	return parsedID, sid, true
 }
 
 // sessionMatches reports whether the token's sid is the live session.
@@ -175,7 +175,7 @@ func refreshSession(c fiber.Ctx) (uuid.UUID, bool) {
 // badly-signed tokens always fail, and an empty input (no cookie/header at
 // all) fails — the refresh token carries no identity, so there is nothing
 // to look up. Pre-sid tokens yield an empty sid.
-func userIDFromAccess(accessString string) (uuid.UUID, string, bool) {
+func userIDFromAccess(accessString string) (userID uuid.UUID, sid string, ok bool) {
 	if accessString == "" {
 		return uuid.Nil, "", false
 	}
@@ -197,12 +197,12 @@ func userIDFromAccess(accessString string) (uuid.UUID, string, bool) {
 	if !ok {
 		return uuid.Nil, "", false
 	}
-	userID, err := uuid.Parse(id)
+	parsedID, err := uuid.Parse(id)
 	if err != nil {
 		return uuid.Nil, "", false
 	}
-	sid, _ := claims["sid"].(string)
-	return userID, sid, true
+	sid, _ = claims["sid"].(string)
+	return parsedID, sid, true
 }
 
 // splitBearer extracts the token from a "Bearer <token>" header value.
