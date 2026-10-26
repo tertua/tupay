@@ -27,7 +27,8 @@ func findOne[T any](tx *gorm.DB, dest *T) error {
 // GetUserByID query for getting one User by given ID.
 func (q *UserQueries) GetUserByID(id uuid.UUID) (models.User, error) {
 	user := models.User{}
-	return user, findOne(q.Where("id = ?", id), &user)
+	err := findOne(q.Where("id = ?", id), &user)
+	return user, err
 }
 
 // GetUserByEmail query for getting one User by given Email. The input is
@@ -36,7 +37,8 @@ func (q *UserQueries) GetUserByID(id uuid.UUID) (models.User, error) {
 // determinism on any legacy duplicate.
 func (q *UserQueries) GetUserByEmail(email string) (models.User, error) {
 	user := models.User{}
-	return user, findOne(q.Where("email = ?", strings.ToLower(strings.TrimSpace(email))).Order("created_at ASC"), &user)
+	err := findOne(q.Where("email = ?", strings.ToLower(strings.TrimSpace(email))).Order("created_at ASC"), &user)
+	return user, err
 }
 
 // CreateUser query for creating a new user by given email and password hash.
@@ -100,7 +102,8 @@ func (q *UserQueries) CreatePasswordReset(userID uuid.UUID, token string, expire
 // GetPasswordReset query for getting a password reset token.
 func (q *UserQueries) GetPasswordReset(token string) (models.PasswordReset, error) {
 	reset := models.PasswordReset{}
-	return reset, findOne(q.Where("token = ?", token), &reset)
+	err := findOne(q.Where("token = ?", token), &reset)
+	return reset, err
 }
 
 // DeletePasswordResetsByUser query for deleting all reset tokens of a user.
