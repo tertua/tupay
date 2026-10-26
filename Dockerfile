@@ -1,7 +1,7 @@
 # Build for the target platform (buildx sets TARGETOS/TARGETARCH; plain
 # `docker build` falls back to the host pair). $BUILDPLATFORM keeps the
 # toolchain native and cross-compiles instead of emulating under qemu.
-FROM --platform=$BUILDPLATFORM golang:1.27-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.27.3-alpine AS builder
 
 LABEL maintainer="Candro Aleandro <admin@tanet.eu.org> (https://tanet.eu.org/)"
 

@@ -2,7 +2,7 @@ module github.com/tertua/tupay
 
 go 1.27
 
-toolchain go1.27.1
+toolchain go1.27.3
 
 require (
 	github.com/coreos/go-oidc/v3 v3.21.0

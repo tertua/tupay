@@ -7,7 +7,7 @@ TuPay adalah aplikasi manajemen invoice berbasis web dengan integrasi payment ga
 ## Tech Stack
 
 **Backend**
-- Go 1.27.1 (pinned)
+- Go 1.27.3 (pinned)
 - Fiber v3 (HTTP framework)
 - GORM (ORM: SQLite dev/test, PostgreSQL production)
 - Redis (optional: sessions/cache, fallback in-memory)
