@@ -100,7 +100,7 @@ func RetryDelivery(c fiber.Ctx) error {
 		return utils.Fail(c, fiber.StatusNotFound, "project not found", nil)
 	}
 	payload := []byte(delivery.Payload)
-	secret, err := relay.ProjectSecret(project.WebhookSecret)
+	secret, err := relay.OpenSecret(project.WebhookSecret)
 	if err != nil {
 		return utils.Fail(c, fiber.StatusInternalServerError, "project secret unavailable", nil)
 	}

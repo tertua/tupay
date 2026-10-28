@@ -30,7 +30,7 @@ func TestSealSecretRoundTrip(t *testing.T) {
 	assert.True(t, strings.HasPrefix(sealed, sealedPrefix))
 	assert.NotContains(t, sealed, plain)
 
-	opened, err := ProjectSecret(sealed)
+	opened, err := OpenSecret(sealed)
 	require.NoError(t, err)
 	assert.Equal(t, plain, opened)
 }
@@ -45,47 +45,47 @@ func TestSealSecretWithoutKeyStoresPlaintext(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, plain, sealed)
 
-	opened, err := ProjectSecret(sealed)
+	opened, err := OpenSecret(sealed)
 	require.NoError(t, err)
 	assert.Equal(t, plain, opened)
 }
 
-// TestProjectSecretPassesLegacyPlaintext keeps rows written before encryption
+// TestOpenSecretPassesLegacyPlaintext keeps rows written before encryption
 // readable, so enabling the key does not break existing projects.
-func TestProjectSecretPassesLegacyPlaintext(t *testing.T) {
+func TestOpenSecretPassesLegacyPlaintext(t *testing.T) {
 	t.Setenv("SECRET_ENCRYPTION_KEY", newTestKey(t))
 
-	opened, err := ProjectSecret("whsec_legacy")
+	opened, err := OpenSecret("whsec_legacy")
 	require.NoError(t, err)
 	assert.Equal(t, "whsec_legacy", opened)
 }
 
-// TestProjectSecretRejectsTamperedCiphertext proves GCM authentication: a
+// TestOpenSecretRejectsTamperedCiphertext proves GCM authentication: a
 // modified stored value is an error, never garbage plaintext signed downstream.
-func TestProjectSecretRejectsTamperedCiphertext(t *testing.T) {
+func TestOpenSecretRejectsTamperedCiphertext(t *testing.T) {
 	t.Setenv("SECRET_ENCRYPTION_KEY", newTestKey(t))
 
 	sealed, err := SealSecret("whsec_tamper")
 	require.NoError(t, err)
 	tampered := sealed[:len(sealed)-2] + "AA"
 
-	_, err = ProjectSecret(tampered)
+	_, err = OpenSecret(tampered)
 	assert.ErrorIs(t, err, ErrSecretUnreadable)
 }
 
-// TestProjectSecretRejectsWrongKey covers a key swap: old rows must fail loudly
+// TestOpenSecretRejectsWrongKey covers a key swap: old rows must fail loudly
 // instead of producing a signature the customer cannot verify.
-func TestProjectSecretRejectsWrongKey(t *testing.T) {
+func TestOpenSecretRejectsWrongKey(t *testing.T) {
 	t.Setenv("SECRET_ENCRYPTION_KEY", newTestKey(t))
 	sealed, err := SealSecret("whsec_rotate")
 	require.NoError(t, err)
 
 	t.Setenv("SECRET_ENCRYPTION_KEY", newTestKey(t))
-	_, err = ProjectSecret(sealed)
+	_, err = OpenSecret(sealed)
 	assert.ErrorIs(t, err, ErrSecretUnreadable)
 
 	t.Setenv("SECRET_ENCRYPTION_KEY", "")
-	_, err = ProjectSecret(sealed)
+	_, err = OpenSecret(sealed)
 	assert.ErrorIs(t, err, ErrSecretKeyMissing)
 }
 
@@ -101,7 +101,7 @@ func TestSealStoredIsIdempotent(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, sealed, again)
 
-	opened, err := ProjectSecret(again)
+	opened, err := OpenSecret(again)
 	require.NoError(t, err)
 	assert.Equal(t, "whsec_once", opened)
 

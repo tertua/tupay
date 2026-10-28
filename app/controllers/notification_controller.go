@@ -56,6 +56,12 @@ func CreateEndpoint(c fiber.Ctx) error {
 	if err != nil {
 		return utils.Fail(c, fiber.StatusInternalServerError, "failed to generate secret", nil)
 	}
+	// Only the sealed form is persisted; the raw secret goes back to the caller
+	// exactly once (here), so a database dump never yields a usable secret.
+	sealed, err := relay.SealSecret(secret)
+	if err != nil {
+		return utils.Fail(c, fiber.StatusInternalServerError, "failed to protect endpoint secret", nil)
+	}
 	db, ok := openDB(c)
 	if !ok {
 		return nil
@@ -63,7 +69,7 @@ func CreateEndpoint(c fiber.Ctx) error {
 	e := &models.NotificationEndpoint{
 		UserID:    userID,
 		TargetURL: target,
-		Secret:    secret,
+		Secret:    sealed,
 		Events:    sanitizeEvents(input.Events),
 		IsActive:  true,
 	}
@@ -153,6 +159,13 @@ func UpdateEndpoint(c fiber.Ctx) error {
 	if input.IsActive != nil {
 		e.IsActive = *input.IsActive
 	}
+	// A legacy row may still hold a plaintext secret: upgrade it while the row
+	// is here, so setting SECRET_ENCRYPTION_KEY also seals existing endpoints.
+	sealed, err := relay.SealStored(e.Secret)
+	if err != nil {
+		return utils.Fail(c, fiber.StatusInternalServerError, "failed to protect endpoint secret", nil)
+	}
+	e.Secret = sealed
 	e.UpdatedAt = time.Now()
 	if err := db.SaveEndpoint(&e); err != nil {
 		return utils.Fail(c, fiber.StatusInternalServerError, "failed to update endpoint", nil)
@@ -222,7 +235,11 @@ func RotateEndpointSecret(c fiber.Ctx) error {
 	if err != nil {
 		return utils.Fail(c, fiber.StatusInternalServerError, "failed to generate secret", nil)
 	}
-	e.Secret = secret
+	sealed, err := relay.SealSecret(secret)
+	if err != nil {
+		return utils.Fail(c, fiber.StatusInternalServerError, "failed to protect endpoint secret", nil)
+	}
+	e.Secret = sealed
 	e.UpdatedAt = time.Now()
 	if err := db.SaveEndpoint(&e); err != nil {
 		return utils.Fail(c, fiber.StatusInternalServerError, "failed to rotate secret", nil)

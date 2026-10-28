@@ -42,7 +42,7 @@ type NotificationEndpoint struct {
 	ID        uuid.UUID `gorm:"type:uuid;primaryKey" db:"id" json:"id"`
 	UserID    uuid.UUID `gorm:"type:uuid;index" db:"user_id" json:"-"`
 	TargetURL string    `gorm:"size:1024" db:"target_url" json:"target_url" validate:"required,lte=1024"`
-	Secret    string    `gorm:"size:128" db:"secret" json:"-"`
+	Secret    string    `gorm:"size:512" db:"secret" json:"-"`
 	Events    string    `gorm:"size:255" db:"events" json:"events" validate:"omitempty,lte=255"`
 	IsActive  bool      `gorm:"default:true" db:"is_active" json:"is_active"`
 	CreatedAt time.Time `db:"created_at" json:"created_at"`

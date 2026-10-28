@@ -41,7 +41,7 @@ func TestGatewaySecretSealedAtRest(t *testing.T) {
 	assert.True(t, strings.HasPrefix(project.WebhookSecret, "v1:"), "stored secret must be sealed")
 	assert.NotContains(t, project.WebhookSecret, raw, "the raw secret must not survive in the row")
 
-	opened, err := relay.ProjectSecret(project.WebhookSecret)
+	opened, err := relay.OpenSecret(project.WebhookSecret)
 	require.NoError(t, err)
 	assert.Equal(t, raw, opened, "the sealed value must open back to the revealed secret")
 
@@ -55,7 +55,7 @@ func TestGatewaySecretSealedAtRest(t *testing.T) {
 	project, err = db.GetProjectBySlug(slug)
 	require.NoError(t, err)
 	assert.True(t, strings.HasPrefix(project.WebhookSecret, "v1:"))
-	opened, err = relay.ProjectSecret(project.WebhookSecret)
+	opened, err = relay.OpenSecret(project.WebhookSecret)
 	require.NoError(t, err)
 	assert.Equal(t, rotated, opened)
 
@@ -99,7 +99,7 @@ func TestGatewaySecretUpgradesLegacyRow(t *testing.T) {
 	project, err = db.GetProjectBySlug(slug)
 	require.NoError(t, err)
 	assert.True(t, strings.HasPrefix(project.WebhookSecret, "v1:"), "update must seal a legacy row")
-	opened, err := relay.ProjectSecret(project.WebhookSecret)
+	opened, err := relay.OpenSecret(project.WebhookSecret)
 	require.NoError(t, err)
 	assert.Equal(t, raw, opened, "sealing on update must not rotate the secret")
 }

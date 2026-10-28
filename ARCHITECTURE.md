@@ -483,7 +483,7 @@ make db.restore FILE=<path|latest>  # replace DB from a snapshot (stop the backe
 **Secrets Management**
 - Never baked in image
 - Injected via `.env` atau env vars di runtime
-- Project webhook signing secrets (`gateway_projects.webhook_secret`) disegel at-rest dengan AES-256-GCM di bawah `SECRET_ENCRYPTION_KEY` (base64 32 byte, wajib di prod): baris `v1:` hanya dibuka saat menandatangani, nilai mentah cuma diungkap sekali saat create/rotate, dan baris plaintext lama tetap terbaca sampai update admin berikutnya menyegelnya
+- Project and user notification webhook signing secrets (`gateway_projects.webhook_secret`, `notification_endpoints.secret`) are sealed at-rest with AES-256-GCM under `SECRET_ENCRYPTION_KEY` (base64 32 bytes, required in prod): `v1:` rows are opened only while signing, raw values are revealed once at create/rotate, and legacy plaintext rows remain readable until the next admin/user update seals them
 - Localhost-only pprof (`DEBUG_PORT`)
 
 ## Performance & Scalability

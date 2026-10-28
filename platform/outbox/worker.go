@@ -196,7 +196,7 @@ func (w *Worker) forwardOne(ctx context.Context, db *database.Queries, d models.
 		return
 	}
 	payload := []byte(d.Payload)
-	secret, serr := relay.ProjectSecret(project.WebhookSecret)
+	secret, serr := relay.OpenSecret(project.WebhookSecret)
 	if serr != nil {
 		retry := nextRetryAt(d.Attempt+1, now)
 		failDelivery(db, d.ID, d.Attempt+1, retry, "project secret unavailable", now)
@@ -278,8 +278,15 @@ func (w *Worker) forwardOneNotification(ctx context.Context, db *database.Querie
 		return
 	}
 	payload := []byte(d.Payload)
+	secret, serr := relay.OpenSecret(endpoint.Secret)
+	if serr != nil {
+		retry := nextRetryAt(d.Attempt+1, now)
+		recordErr("mark notification failed", db.MarkNotificationFailed(d.ID, d.Attempt+1, retry, 0, "endpoint secret unavailable", now), "delivery_id", d.ID.String())
+		logger.L().Error("notification endpoint secret unreadable", "delivery_id", d.ID.String(), "endpoint_id", d.EndpointID.String(), "err", serr)
+		return
+	}
 	d.Attempt++
-	result, ferr := ForwardNotification(ctx, d.TargetURL, "evt_retry_"+d.ID.String(), payload, endpoint.Secret)
+	result, ferr := ForwardNotification(ctx, d.TargetURL, "evt_retry_"+d.ID.String(), payload, secret)
 	if ferr != nil {
 		retry := nextRetryAt(d.Attempt, now)
 		recordErr("mark notification failed", db.MarkNotificationFailed(d.ID, d.Attempt, retry, 0, constants.TruncateLog(ferr.Error()), now), "delivery_id", d.ID.String())

@@ -12,11 +12,12 @@ import (
 	"github.com/tertua/tupay/pkg/configs"
 )
 
-// Stored project secrets carry a version prefix so the key can be rotated
-// later: v1 rows are AES-256-GCM sealed, anything else is a legacy plaintext
-// row written before encryption landed and is still read as-is. Writing a
-// plaintext value into a sealed column is therefore indistinguishable from a
-// legacy row — the guard is the admin API, not the format.
+// Stored webhook secrets (gateway project + user notification endpoint) carry a
+// version prefix so the key can be rotated later: v1 rows are AES-256-GCM
+// sealed, anything else is a legacy plaintext row written before encryption
+// landed and is still read as-is. Writing a plaintext value into a sealed column
+// is therefore indistinguishable from a legacy row — the guard is the admin API,
+// not the format.
 const (
 	sealedPrefix  = "v1:"
 	secretKeySize = 32
@@ -79,9 +80,10 @@ func SealStored(stored string) (string, error) {
 	return SealSecret(stored)
 }
 
-// ProjectSecret returns the usable plaintext for a stored project secret:
-// sealed rows are opened, legacy plaintext rows pass through untouched.
-func ProjectSecret(stored string) (string, error) {
+// OpenSecret returns the usable plaintext for a stored webhook secret (gateway
+// project or user notification endpoint): sealed rows are opened, legacy
+// plaintext rows pass through untouched.
+func OpenSecret(stored string) (string, error) {
 	if !strings.HasPrefix(stored, sealedPrefix) {
 		return stored, nil
 	}

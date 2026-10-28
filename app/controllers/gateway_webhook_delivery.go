@@ -19,7 +19,7 @@ import (
 // missing or mismatched key is a hard error (500, so the provider retries),
 // never a silently unsigned or forged event.
 func queueDownstreamDelivery(c fiber.Ctx, db *database.Queries, txn models.GatewayTransaction, project models.GatewayProject, notif *gateway.NotificationResult, gatewayName, eventID string) error {
-	secret, err := relay.ProjectSecret(project.WebhookSecret)
+	secret, err := relay.OpenSecret(project.WebhookSecret)
 	if err != nil {
 		logger.L().Error("project webhook secret unreadable", "project", project.Slug, "err", err)
 		return utils.Fail(c, fiber.StatusInternalServerError, "failed to queue delivery", nil)
