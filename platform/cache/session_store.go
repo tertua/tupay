@@ -13,11 +13,16 @@ import (
 // ErrSessionNotFound is returned when a session key does not exist.
 var ErrSessionNotFound = errors.New("session not found")
 
-// SessionStore persists refresh tokens.
+// SessionStore is the shared TTL key/value store: refresh sessions plus the
+// counters behind per-account sign-in throttling.
 type SessionStore interface {
 	Get(ctx context.Context, key string) (string, error)
 	Set(ctx context.Context, key, value string, ttl time.Duration) error
 	Delete(ctx context.Context, key string) error
+	// Incr atomically increments key and returns the new value, arming ttl on
+	// the first hit only. A Get+Set pair would lose counts across instances,
+	// which is exactly what a brute-force counter cannot afford.
+	Incr(ctx context.Context, key string, ttl time.Duration) (int64, error)
 }
 
 var (
@@ -26,8 +31,8 @@ var (
 	storeErr    error
 )
 
-// Sessions returns the shared session store: Redis when REDIS_HOST is set,
-// in-memory otherwise (single instance, suitable for dev without Redis).
+// Sessions returns the shared store: Redis when REDIS_HOST is set, in-memory
+// otherwise (single instance, suitable for dev without Redis).
 func Sessions() (SessionStore, error) {
 	storeOnce.Do(func() {
 		if !configs.Get().Redis.Enabled() {
@@ -43,6 +48,20 @@ func Sessions() (SessionStore, error) {
 	})
 	return sharedStore, storeErr
 }
+
+// incrScript arms the key's TTL only when it is created, so a fixed counter
+// window cannot be stretched by repeated failures.
+var incrScript = redis.NewScript(`
+local n = redis.call("INCR", KEYS[1])
+if n == 1 then
+  redis.call("PEXPIRE", KEYS[1], ARGV[1])
+end
+return n
+`)
+
+// errInvalidTTL rejects a zero/negative window instead of writing a key that
+// never expires (silently disabling the limiter it backs).
+var errInvalidTTL = errors.New("cache: ttl must be positive")
 
 // redisStore is a SessionStore backed by Redis.
 type redisStore struct {
@@ -65,65 +84,9 @@ func (s *redisStore) Delete(ctx context.Context, key string) error {
 	return s.client.Del(ctx, key).Err()
 }
 
-// memoryEntry is one in-memory session with expiry.
-type memoryEntry struct {
-	value   string
-	expires time.Time
-}
-
-// memoryStore is a SessionStore backed by a guarded map.
-type memoryStore struct {
-	mu    sync.Mutex
-	items map[string]memoryEntry
-}
-
-func newMemoryStore() *memoryStore {
-	store := &memoryStore{items: make(map[string]memoryEntry)}
-	go store.janitor()
-	return store
-}
-
-func (s *memoryStore) Get(_ context.Context, key string) (string, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	entry, ok := s.items[key]
-	if !ok || time.Now().After(entry.expires) {
-		delete(s.items, key)
-		return "", ErrSessionNotFound
+func (s *redisStore) Incr(ctx context.Context, key string, ttl time.Duration) (int64, error) {
+	if ttl <= 0 {
+		return 0, errInvalidTTL
 	}
-	return entry.value, nil
-}
-
-func (s *memoryStore) Set(_ context.Context, key, value string, ttl time.Duration) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	s.items[key] = memoryEntry{value: value, expires: time.Now().Add(ttl)}
-	return nil
-}
-
-func (s *memoryStore) Delete(_ context.Context, key string) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	delete(s.items, key)
-	return nil
-}
-
-// janitor removes expired sessions every minute.
-func (s *memoryStore) janitor() {
-	ticker := time.NewTicker(time.Minute)
-	defer ticker.Stop()
-
-	for range ticker.C {
-		now := time.Now()
-		s.mu.Lock()
-		for key, entry := range s.items {
-			if now.After(entry.expires) {
-				delete(s.items, key)
-			}
-		}
-		s.mu.Unlock()
-	}
+	return incrScript.Run(ctx, s.client, []string{key}, ttl.Milliseconds()).Int64()
 }

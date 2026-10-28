@@ -293,6 +293,11 @@ func ResetPassword(c fiber.Ctx) error {
 		return utils.Fail(c, fiber.StatusInternalServerError, "failed to update password", nil)
 	}
 	_ = db.DeletePasswordResetsByUser(reset.UserID)
+	// Inbox control outranks a stale lockout counter: the reset proves ownership,
+	// so the next sign-in must not walk into a lock armed by an attacker.
+	if user, err := db.GetUserByID(reset.UserID); err == nil {
+		clearLoginFailures(c.Context(), user.Email)
+	}
 	// The password changed out-of-band: the old session (if any) dies here, and any stale cookies lingering in this browser are cleared too.
 	_ = deleteRefreshToken(c.Context(), reset.UserID)
 	utils.ClearSession(c)

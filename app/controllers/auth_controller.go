@@ -58,16 +58,21 @@ func Login(c fiber.Ctx) error {
 	}
 
 	payload.Email = normalizeEmail(payload.Email)
+	// Refuse before touching the password: a locked account must not keep
+	// validating guesses, even ones the hash would accept.
+	if remaining := loginLockRemaining(c.Context(), payload.Email); remaining > 0 {
+		return loginLocked(c, remaining)
+	}
 	user, err := db.GetUserByEmail(payload.Email)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			recordLoginFailure(c, db, payload.Email, "not_found", uuid.Nil)
+			recordBadCredential(c, db, payload.Email, "not_found", uuid.Nil)
 			return utils.Fail(c, fiber.StatusUnauthorized, "wrong email address or password", nil)
 		}
 		return utils.Fail(c, fiber.StatusInternalServerError, "failed to query user account", nil) // live DB error, not a bad credential
 	}
 	if !utils.ComparePasswords(user.PasswordHash, payload.Password) {
-		recordLoginFailure(c, db, payload.Email, "bad_password", user.ID)
+		recordBadCredential(c, db, payload.Email, "bad_password", user.ID)
 		return utils.Fail(c, fiber.StatusUnauthorized, "wrong email address or password", nil)
 	}
 	if gateAccountStatus(c, db, user) {
@@ -77,6 +82,7 @@ func Login(c fiber.Ctx) error {
 	if _, err := startSession(c, db, user.ID, loginOrgHint(db, user.ID)); err != nil {
 		return utils.Fail(c, fiber.StatusInternalServerError, "failed to start session", nil)
 	}
+	clearLoginFailures(c.Context(), payload.Email)
 	recordAudit(c, db, user.ID, "auth.login.success", "user", user.ID.String(), "")
 
 	user.PasswordHash = ""

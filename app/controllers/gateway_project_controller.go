@@ -37,6 +37,9 @@ func CreateProject(c fiber.Ctx) error {
 	if err := utils.NewValidator().Struct(input); err != nil {
 		return utils.ValidationFailed(c, err)
 	}
+	if !validateEndpointURL(strings.TrimSpace(input.WebhookURL)) {
+		return utils.Fail(c, fiber.StatusBadRequest, "invalid webhook_url, must be http(s) and reachable", nil)
+	}
 	defaultGateway := resolveGateway(input.DefaultGateway, gateway.DefaultProvider())
 	if _, err := gateway.Get(defaultGateway); err != nil {
 		return utils.Fail(c, fiber.StatusBadRequest, "unknown payment gateway", nil)
@@ -136,7 +139,14 @@ func UpdateProject(c fiber.Ctx) error {
 		p.Name = strings.TrimSpace(input.Name)
 	}
 	if strings.TrimSpace(input.WebhookURL) != "" {
-		p.WebhookURL = strings.TrimSpace(input.WebhookURL)
+		target := strings.TrimSpace(input.WebhookURL)
+		// Same guard as create: the outbox worker POSTs to this URL, so a
+		// scheme-only or internal target must never be stored (the owner could
+		// otherwise point us at loopback or the metadata endpoint).
+		if !validateEndpointURL(target) {
+			return utils.Fail(c, fiber.StatusBadRequest, "invalid webhook_url, must be http(s) and reachable", nil)
+		}
+		p.WebhookURL = target
 	}
 	if strings.TrimSpace(input.DefaultGateway) != "" {
 		name := resolveGateway(input.DefaultGateway, "")
@@ -215,34 +225,4 @@ func RotateProjectSecret(c fiber.Ctx) error {
 		recordAudit(c, db, adminID, "gateway.secret.rotate", "project", p.Slug, "")
 	}
 	return utils.OK(c, fiber.StatusOK, fiber.Map{"project": projectResponse(p, true, "")})
-}
-
-// ListAllTransactions returns one page of relay transactions for admins.
-// @Description List relay transactions.
-// @Summary list relay transactions
-// @Tags Admin
-// @Produce json
-// @Param page query int false "Page number (default 1)"
-// @Param per_page query int false "Items per page (default 20, max 100)"
-// @Success 200 {object} map[string]interface{}
-// @Router /admin/gateway/transactions [get]
-func ListAllTransactions(c fiber.Ctx) error {
-	db, ok := openDB(c)
-	if !ok {
-		return nil
-	}
-	paging := utils.ParsePagination(c)
-	rows, err := db.ListAllTransactions(paging.Limit(), paging.Offset())
-	if err != nil {
-		return utils.Fail(c, fiber.StatusInternalServerError, "failed to load transactions", nil)
-	}
-	total, err := db.CountAllTransactions()
-	if err != nil {
-		return utils.Fail(c, fiber.StatusInternalServerError, "failed to count transactions", nil)
-	}
-	out := make([]intentResponseRow, 0, len(rows))
-	for _, t := range rows {
-		out = append(out, intentResponse(t))
-	}
-	return utils.OK(c, fiber.StatusOK, fiber.Map{"transactions": out, "meta": paging.Meta(total)})
 }

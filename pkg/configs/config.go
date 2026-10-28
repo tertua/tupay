@@ -122,12 +122,6 @@ type AIConfig struct {
 	GeminiModel string // GEMINI_MODEL
 }
 
-// AuthConfig holds public auth toggles.
-type AuthConfig struct {
-	AllowRegistration        bool // ALLOW_REGISTRATION
-	RequireEmailVerification bool // REQUIRE_EMAIL_VERIFICATION
-}
-
 // WebUIConfig holds the optional embedded-frontend settings.
 type WebUIConfig struct {
 	Dir string // SERVE_WEBUI (legacy SERVE_SPA_DIR): empty = API-only (default)
@@ -275,10 +269,7 @@ func Load() (Config, error) {
 			GeminiKey:   strings.TrimSpace(os.Getenv("GEMINI_API_KEY")),
 			GeminiModel: envOr("GEMINI_MODEL", "gemini-2.0-flash"),
 		},
-		Auth: AuthConfig{
-			AllowRegistration:        envBool("ALLOW_REGISTRATION", true),
-			RequireEmailVerification: envBool("REQUIRE_EMAIL_VERIFICATION", true),
-		},
+		Auth: loadAuth(intEnv),
 		WebUI: WebUIConfig{
 			Dir: strings.TrimSpace(envOr("SERVE_WEBUI", os.Getenv("SERVE_SPA_DIR"))),
 		},

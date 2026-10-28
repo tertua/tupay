@@ -453,6 +453,7 @@ make db.restore FILE=<path|latest>  # replace DB from a snapshot (stop the backe
 - Public: 30 req/min
 - Webhook: 60 req/min
 - Gateway: 120 req/min
+- Per-account sign-in lockout (bukan pengganti limit di atas): `AUTH_LOCKOUT_THRESHOLD` password salah dalam satu jendela meng-arm lock `AUTH_LOCKOUT_BASE_SECONDS` yang berlipat sampai `AUTH_LOCKOUT_MAX_SECONDS` (sekaligus lebar jendela). Counter di-key dari hash email, jadi alamat tak terdaftar menerima 429 yang sama (anti-enumerasi); 429 membawa `Retry-After`; login sukses atau reset password membersihkan counter; cache mati fail-open karena limiter IP tetap jalan.
 
 **CAPTCHA** (Cloudflare Turnstile, optional)
 - Login/register/forgot-password
@@ -466,6 +467,7 @@ make db.restore FILE=<path|latest>  # replace DB from a snapshot (stop the backe
 
 **Webhook Security**
 - Signature verification per provider (HMAC)
+- Gateway project `webhook_url` divalidasi saat create/update dengan guard yang sama seperti endpoint notifikasi (`validateEndpointURL`: hanya http(s), host loopback/private/link-local ditolak di prod), karena outbox worker POST ke target itu
 - Amount/currency guard: reject mismatch settlement
 - Replay idempotency via `gateway_order_id` unique constraint
 
