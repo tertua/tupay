@@ -5,7 +5,6 @@ import (
 	"time"
 
 	"github.com/gofiber/fiber/v3"
-	"github.com/google/uuid"
 	"github.com/tertua/tupay/app/models"
 	"github.com/tertua/tupay/pkg/utils"
 	"github.com/tertua/tupay/platform/gateway"
@@ -59,6 +58,12 @@ func CreateProject(c fiber.Ctx) error {
 	if err != nil {
 		return utils.Fail(c, fiber.StatusInternalServerError, "failed to generate secret", nil)
 	}
+	// Only the sealed form is persisted; the raw secret goes back to the caller
+	// exactly once (here), so a database dump never yields a usable secret.
+	sealedSecret, err := relay.SealSecret(secret)
+	if err != nil {
+		return utils.Fail(c, fiber.StatusInternalServerError, "failed to protect webhook secret", nil)
+	}
 	now := time.Now()
 	p := &models.GatewayProject{
 		Slug:           input.Slug,
@@ -67,7 +72,7 @@ func CreateProject(c fiber.Ctx) error {
 		Name:           strings.TrimSpace(input.Name),
 		APIKeyHash:     relay.HashKey(apiKey),
 		WebhookURL:     strings.TrimSpace(input.WebhookURL),
-		WebhookSecret:  secret,
+		WebhookSecret:  sealedSecret,
 		DefaultGateway: defaultGateway,
 		IsActive:       true,
 		CreatedAt:      now,
@@ -76,7 +81,7 @@ func CreateProject(c fiber.Ctx) error {
 	if err := db.CreateProject(p); err != nil {
 		return utils.Fail(c, fiber.StatusInternalServerError, "failed to create project", nil)
 	}
-	return utils.OK(c, fiber.StatusCreated, fiber.Map{"project": projectResponse(*p, true, apiKey)})
+	return utils.OK(c, fiber.StatusCreated, fiber.Map{"project": projectResponse(*p, secret, apiKey)})
 }
 
 // ListProjects returns one page of downstream projects for admins.
@@ -104,7 +109,7 @@ func ListProjects(c fiber.Ctx) error {
 	}
 	out := make([]projectResponseRow, 0, len(rows))
 	for _, p := range rows {
-		out = append(out, projectResponse(p, true, ""))
+		out = append(out, projectResponse(p, "", ""))
 	}
 	return utils.OK(c, fiber.StatusOK, fiber.Map{"projects": out, "meta": paging.Meta(total)})
 }
@@ -158,71 +163,16 @@ func UpdateProject(c fiber.Ctx) error {
 	if input.IsActive != nil {
 		p.IsActive = *input.IsActive
 	}
+	// A legacy row may still hold a plaintext secret: upgrade it while the row
+	// is here, so setting SECRET_ENCRYPTION_KEY also seals existing projects.
+	sealed, err := relay.SealStored(p.WebhookSecret)
+	if err != nil {
+		return utils.Fail(c, fiber.StatusInternalServerError, "failed to protect webhook secret", nil)
+	}
+	p.WebhookSecret = sealed
 	p.UpdatedAt = time.Now()
 	if err := db.SaveProject(&p); err != nil {
 		return utils.Fail(c, fiber.StatusInternalServerError, "failed to update project", nil)
 	}
-	return utils.OK(c, fiber.StatusOK, fiber.Map{"project": projectResponse(p, true, "")})
-}
-
-// @Description Rotate a project API key.
-// @Summary rotate project key
-// @Tags Admin
-// @Produce json
-// @Param slug path string true "Project slug"
-// @Success 200 {object} map[string]interface{}
-// @Router /admin/gateway/projects/{slug}/rotate-key [post]
-func RotateProjectKey(c fiber.Ctx) error {
-	db, ok := openDB(c)
-	if !ok {
-		return nil
-	}
-	p, err := db.GetProjectBySlug(c.Params("slug"))
-	if err != nil {
-		return utils.NotFoundOrFailed(c, err, "project")
-	}
-	apiKey, err := relay.GenerateAPIKey()
-	if err != nil {
-		return utils.Fail(c, fiber.StatusInternalServerError, "failed to generate api key", nil)
-	}
-	p.APIKeyHash = relay.HashKey(apiKey)
-	p.UpdatedAt = time.Now()
-	if err := db.SaveProject(&p); err != nil {
-		return utils.Fail(c, fiber.StatusInternalServerError, "failed to rotate key", nil)
-	}
-	if adminID := utils.CurrentActorID(c); adminID != uuid.Nil {
-		recordAudit(c, db, adminID, "gateway.key.rotate", "project", p.Slug, "")
-	}
-	return utils.OK(c, fiber.StatusOK, fiber.Map{"project": projectResponse(p, true, apiKey)})
-}
-
-// @Description Rotate a project webhook secret.
-// @Summary rotate project secret
-// @Tags Admin
-// @Produce json
-// @Param slug path string true "Project slug"
-// @Success 200 {object} map[string]interface{}
-// @Router /admin/gateway/projects/{slug}/rotate-secret [post]
-func RotateProjectSecret(c fiber.Ctx) error {
-	db, ok := openDB(c)
-	if !ok {
-		return nil
-	}
-	p, err := db.GetProjectBySlug(c.Params("slug"))
-	if err != nil {
-		return utils.NotFoundOrFailed(c, err, "project")
-	}
-	secret, err := relay.GenerateSecret()
-	if err != nil {
-		return utils.Fail(c, fiber.StatusInternalServerError, "failed to generate secret", nil)
-	}
-	p.WebhookSecret = secret
-	p.UpdatedAt = time.Now()
-	if err := db.SaveProject(&p); err != nil {
-		return utils.Fail(c, fiber.StatusInternalServerError, "failed to rotate secret", nil)
-	}
-	if adminID := utils.CurrentActorID(c); adminID != uuid.Nil {
-		recordAudit(c, db, adminID, "gateway.secret.rotate", "project", p.Slug, "")
-	}
-	return utils.OK(c, fiber.StatusOK, fiber.Map{"project": projectResponse(p, true, "")})
+	return utils.OK(c, fiber.StatusOK, fiber.Map{"project": projectResponse(p, "", "")})
 }

@@ -100,8 +100,12 @@ func RetryDelivery(c fiber.Ctx) error {
 		return utils.Fail(c, fiber.StatusNotFound, "project not found", nil)
 	}
 	payload := []byte(delivery.Payload)
-	signature := relay.SignPayload(payload, project.WebhookSecret)
-	result, ferr := relay.Forward(c.Context(), delivery.TargetURL, project.Slug, "evt_retry_"+delivery.ID.String(), payload, project.WebhookSecret)
+	secret, err := relay.ProjectSecret(project.WebhookSecret)
+	if err != nil {
+		return utils.Fail(c, fiber.StatusInternalServerError, "project secret unavailable", nil)
+	}
+	signature := relay.SignPayload(payload, secret)
+	result, ferr := relay.Forward(c.Context(), delivery.TargetURL, project.Slug, "evt_retry_"+delivery.ID.String(), payload, secret)
 	delivery.Attempt++
 	delivery.Signature = signature
 	delivery.UpdatedAt = time.Now()

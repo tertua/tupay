@@ -22,7 +22,7 @@ export function AdminGatewayCredentials({ project, onClose }) {
           {[
             ["apiKey", project.api_key],
             ["webhookSecret", project.webhook_secret],
-          ].map(([name, value]) => (
+          ].filter(([, value]) => Boolean(value)).map(([name, value]) => (
             <div key={name} className="mt-3 flex items-center gap-2">
               <code className="min-w-0 flex-1 truncate rounded-xl bg-[var(--surface)] px-3 py-2 text-xs text-[var(--ink)]">{value}</code>
               <Button type="button" size="iconSm" variant="outline" onClick={() => copy(value, name)} aria-label={t("gateway.copy")}>

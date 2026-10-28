@@ -6,7 +6,10 @@ import (
 	"github.com/tertua/tupay/app/models"
 )
 
-func projectResponse(p models.GatewayProject, revealSecrets bool, apiKey string) projectResponseRow {
+// projectResponse renders a project for the admin API. revealSecret carries the
+// raw webhook secret only on the create and rotate-secret responses: the secret
+// is sealed at rest, so the stored value is never echoed back.
+func projectResponse(p models.GatewayProject, revealSecret, apiKey string) projectResponseRow {
 	out := projectResponseRow{
 		Slug:           p.Slug,
 		Name:           p.Name,
@@ -18,8 +21,8 @@ func projectResponse(p models.GatewayProject, revealSecrets bool, apiKey string)
 	}
 	// A pointer keeps webhook_secret present even when the revealed value is the
 	// empty string; omitempty on a plain string would drop it.
-	if revealSecrets {
-		out.WebhookSecret = &p.WebhookSecret
+	if revealSecret != "" {
+		out.WebhookSecret = &revealSecret
 	}
 	if apiKey != "" {
 		out.APIKey = apiKey

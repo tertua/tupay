@@ -169,4 +169,5 @@ func setValidProdEnv(t *testing.T) {
 	t.Setenv("JWT_REFRESH_KEY", "test-refresh-value")
 	t.Setenv("TUPAY_PUBLIC_URL", "https://api.example.com")
 	t.Setenv("APP_PUBLIC_URL", "https://app.example.com")
+	t.Setenv("SECRET_ENCRYPTION_KEY", testEncryptionKey())
 }

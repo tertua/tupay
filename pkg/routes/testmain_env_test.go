@@ -16,4 +16,7 @@ func seedRouteTestEnv() {
 	os.Setenv("SQLITE_PATH", "file::memory:?cache=shared")
 	os.Setenv("REDIS_HOST", "")
 	os.Setenv("REQUIRE_EMAIL_VERIFICATION", "false")
+	// Seal project webhook secrets here too, so the relay flow also covers the
+	// sealed-at-rest -> open-before-sign path (32 bytes of "k", base64).
+	os.Setenv("SECRET_ENCRYPTION_KEY", "a2tra2tra2tra2tra2tra2tra2tra2tra2tra2tra2s=")
 }

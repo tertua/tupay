@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"database/sql"
-	"encoding/json"
 	"errors"
 	"slices"
 	"strings"
@@ -15,7 +14,6 @@ import (
 	"github.com/tertua/tupay/pkg/utils"
 	"github.com/tertua/tupay/platform/cache"
 	"github.com/tertua/tupay/platform/gateway"
-	"github.com/tertua/tupay/platform/relay"
 )
 
 // HandleGatewayWebhook handles notifications for any registered gateway.
@@ -132,37 +130,5 @@ func handleGatewayWebhook(c fiber.Ctx, gatewayName string) error {
 		return utils.OK(c, fiber.StatusOK, fiber.Map{"success": true})
 	}
 
-	payload, _ := json.Marshal(relay.Payload{
-		EventID:         "evt_" + eventID,
-		OrderID:         txn.OrderID,
-		ProjectSlug:     txn.ProjectSlug,
-		Gateway:         gatewayName,
-		ExternalOrderID: txn.ExternalOrderID,
-		Status:          status,
-		GrossAmountIDR:  notif.GrossMinor,
-		AmountDecimal:   notif.GrossDecimal,
-		Currency:        notif.Currency,
-		TransactionID:   notif.TransactionID,
-		PaymentType:     notif.PaymentType,
-		PaymentMethod:   txn.PaymentMethod,
-		PaidAt:          time.Now().UTC().Format(time.RFC3339),
-	})
-	delivery := &models.WebhookDelivery{
-		ID:          uuid.New(),
-		OrderID:     txn.OrderID,
-		ProjectSlug: txn.ProjectSlug,
-		Gateway:     gatewayName,
-		TargetURL:   project.WebhookURL,
-		Payload:     string(payload),
-		CreatedAt:   time.Now(),
-		UpdatedAt:   time.Now(),
-		Status:      "pending",
-	}
-	delivery.Signature = relay.SignPayload(payload, project.WebhookSecret)
-	if err := db.CreateDelivery(delivery); err != nil {
-		return utils.Fail(c, fiber.StatusInternalServerError, "failed to queue delivery", nil)
-	}
-	// The background worker forwards and retries; the provider gets a fast
-	// acknowledgement and downstream state is tracked in webhook_deliveries.
-	return utils.OK(c, fiber.StatusOK, fiber.Map{"success": true, "queued": true})
+	return queueDownstreamDelivery(c, db, txn, project, notif, gatewayName, eventID)
 }

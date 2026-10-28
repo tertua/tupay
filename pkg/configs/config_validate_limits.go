@@ -1,6 +1,9 @@
 package configs
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 // validateLimits rejects every non-positive numeric knob plus the one
 // relational rule the env-int map cannot express: a lockout base above its cap
@@ -39,6 +42,14 @@ func (c Config) validateLimits() error {
 	if c.Auth.LockoutBaseSec > c.Auth.LockoutMaxSec {
 		return fmt.Errorf("invalid AUTH_LOCKOUT_BASE_SECONDS %d: must be <= AUTH_LOCKOUT_MAX_SECONDS %d",
 			c.Auth.LockoutBaseSec, c.Auth.LockoutMaxSec)
+	}
+	if c.Redis.Enabled() {
+		if port, err := strconv.Atoi(c.Redis.Port); err != nil || port < 1 || port > 65535 {
+			return fmt.Errorf("invalid REDIS_PORT %q: must be 1-65535", c.Redis.Port)
+		}
+		if c.Redis.DBNumber < 0 {
+			return fmt.Errorf("invalid REDIS_DB_NUMBER: must be >= 0")
+		}
 	}
 	return nil
 }

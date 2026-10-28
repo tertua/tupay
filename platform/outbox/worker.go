@@ -196,10 +196,17 @@ func (w *Worker) forwardOne(ctx context.Context, db *database.Queries, d models.
 		return
 	}
 	payload := []byte(d.Payload)
-	d.Signature = relay.SignPayload(payload, project.WebhookSecret)
+	secret, serr := relay.ProjectSecret(project.WebhookSecret)
+	if serr != nil {
+		retry := nextRetryAt(d.Attempt+1, now)
+		failDelivery(db, d.ID, d.Attempt+1, retry, "project secret unavailable", now)
+		logger.L().Error("outbox delivery secret unavailable", "delivery_id", d.ID.String(), "project", d.ProjectSlug, "err", serr)
+		return
+	}
+	d.Signature = relay.SignPayload(payload, secret)
 	d.Attempt++
 	d.UpdatedAt = now
-	result, ferr := relay.Forward(ctx, d.TargetURL, project.Slug, "evt_retry_"+d.ID.String(), payload, project.WebhookSecret)
+	result, ferr := relay.Forward(ctx, d.TargetURL, project.Slug, "evt_retry_"+d.ID.String(), payload, secret)
 	if ferr != nil {
 		retry := nextRetryAt(d.Attempt, now)
 		failDelivery(db, d.ID, d.Attempt, retry, constants.TruncateLog(ferr.Error()), now)

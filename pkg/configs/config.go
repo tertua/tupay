@@ -29,6 +29,7 @@ type Config struct {
 	Mail      MailConfig
 	Auth      AuthConfig
 	WebUI     WebUIConfig
+	Secrets   SecretsConfig
 
 	Relay RelayConfig
 	Log   LogConfig
@@ -120,11 +121,6 @@ type AIConfig struct {
 	TimeoutSec  int    // AI_TIMEOUT_SECONDS
 	GeminiKey   string // GEMINI_API_KEY
 	GeminiModel string // GEMINI_MODEL
-}
-
-// WebUIConfig holds the optional embedded-frontend settings.
-type WebUIConfig struct {
-	Dir string // SERVE_WEBUI (legacy SERVE_SPA_DIR): empty = API-only (default)
 }
 
 // MailConfig holds SMTP settings.
@@ -269,10 +265,9 @@ func Load() (Config, error) {
 			GeminiKey:   strings.TrimSpace(os.Getenv("GEMINI_API_KEY")),
 			GeminiModel: envOr("GEMINI_MODEL", "gemini-2.0-flash"),
 		},
-		Auth: loadAuth(intEnv),
-		WebUI: WebUIConfig{
-			Dir: strings.TrimSpace(envOr("SERVE_WEBUI", os.Getenv("SERVE_SPA_DIR"))),
-		},
+		Auth:    loadAuth(intEnv),
+		WebUI:   loadWebUI(),
+		Secrets: loadSecrets(),
 		Mail: MailConfig{
 			SMTPHost:     strings.TrimSpace(os.Getenv("SMTP_HOST")),
 			SMTPPort:     envOr("SMTP_PORT", "587"),

@@ -53,13 +53,8 @@ func (c Config) Validate() error {
 	if err := c.validateLimits(); err != nil {
 		return err
 	}
-	if c.Redis.Enabled() {
-		if port, err := strconv.Atoi(c.Redis.Port); err != nil || port < 1 || port > 65535 {
-			return fmt.Errorf("invalid REDIS_PORT %q: must be 1-65535", c.Redis.Port)
-		}
-		if c.Redis.DBNumber < 0 {
-			return fmt.Errorf("invalid REDIS_DB_NUMBER: must be >= 0")
-		}
+	if err := c.Secrets.validate(c.Stage); err != nil {
+		return err
 	}
 	if c.Debug.Port != "" {
 		if port, err := strconv.Atoi(c.Debug.Port); err != nil || port < 1 || port > 65535 {
@@ -95,6 +90,7 @@ func (c Config) Validate() error {
 // block boot: the server runs, but an operator should know.
 func (c Config) Warnings() []string {
 	var out []string
+	out = append(out, c.Secrets.warnings(c.Stage)...)
 	if c.Stage == "prod" && strings.TrimSpace(c.Captcha.TurnstileSecret) == "" {
 		out = append(out, "captcha disabled in prod: bots can register")
 	}
