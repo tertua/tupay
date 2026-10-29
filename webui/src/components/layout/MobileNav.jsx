@@ -15,7 +15,7 @@ function MobileTab({ to, icon: Icon, labelKey }) {
         cn(
           "flex min-w-[3rem] flex-1 flex-col items-center gap-1 rounded-2xl px-1 py-2",
           isActive
-            ? "bg-[var(--ink)] text-[var(--bg)] shadow-card"
+            ? "bg-[var(--accent-strong)] text-[var(--bg)] shadow-card"
             : "text-[var(--ink-muted)]",
         )
       }

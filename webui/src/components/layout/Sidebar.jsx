@@ -29,7 +29,7 @@ function NavItem({ to, href, icon: Icon, labelKey }) {
       className={cn(
         ROW_BASE,
         isActive
-          ? "bg-[var(--ink)] text-[var(--bg)] shadow-card"
+          ? "bg-[var(--accent-strong)] text-[var(--bg)] shadow-card"
           : "text-[var(--ink-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)]",
       )}
     >
@@ -49,7 +49,7 @@ function ActionRow({ icon: Icon, label, onClick, to }) {
       className={cn(
         ROW_BASE,
         isActive
-          ? "bg-[var(--ink)] text-[var(--bg)] shadow-card"
+          ? "bg-[var(--accent-strong)] text-[var(--bg)] shadow-card"
           : "text-[var(--ink-muted)] hover:bg-[var(--surface-2)] hover:text-[var(--ink)]"
       )}
     >
