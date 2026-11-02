@@ -7,7 +7,7 @@ toolchain go1.27.1
 require (
 	github.com/coreos/go-oidc/v3 v3.21.0
 	github.com/glebarez/sqlite v1.11.0
-	github.com/go-jose/go-jose/v4 v4.1.5
+	github.com/go-jose/go-jose/v4 v4.1.6
 	github.com/go-playground/validator/v10 v10.30.5
 	github.com/gofiber/contrib/v3/swaggo v1.0.12
 	github.com/gofiber/fiber/v3 v3.5.0
