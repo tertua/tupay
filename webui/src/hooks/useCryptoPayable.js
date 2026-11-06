@@ -10,24 +10,30 @@ import { publicPayApi } from "@/api/publicPay";
 // Seam: (token, asset, active) — `active` only runs the request while the
 // payer is still choosing, never while a payment is being created.
 export function useCryptoPayable(token, asset, active) {
-  const [state, setState] = useState({ checking: false, payable: true });
+  const [state, setState] = useState({ checking: false, payable: true, minAmount: "", minCurrency: "" });
 
   useEffect(() => {
     if (!active || !asset) {
-      setState({ checking: false, payable: true });
+      setState({ checking: false, payable: true, minAmount: "", minCurrency: "" });
       return undefined;
     }
     let cancelled = false;
-    setState({ checking: true, payable: true });
+    setState({ checking: true, payable: true, minAmount: "", minCurrency: "" });
     publicPayApi
       .get(token, asset)
       .then((res) => {
         if (cancelled) return;
-        const offered = (res?.methods || []).some((m) => m.id === "crypto");
-        setState({ checking: false, payable: offered });
+        const crypto = (res?.methods || []).find((m) => m.id === "crypto");
+        const blocked = !!crypto?.below_minimum;
+        setState({
+          checking: false,
+          payable: !blocked,
+          minAmount: blocked ? crypto.min_amount : "",
+          minCurrency: crypto?.currency || "",
+        });
       })
       .catch(() => {
-        if (!cancelled) setState({ checking: false, payable: true });
+        if (!cancelled) setState({ checking: false, payable: true, minAmount: "", minCurrency: "" });
       });
     return () => {
       cancelled = true;

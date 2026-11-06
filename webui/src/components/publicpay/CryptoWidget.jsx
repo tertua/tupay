@@ -3,6 +3,7 @@ import { Loader2, Copy, Check, Download } from "lucide-react";
 import { downloadImage } from "@/lib/download";
 import { t } from "@/lib/i18n";
 import { cryptoLabel } from "@/lib/cryptoAssets";
+import { formatMoney } from "@/lib/utils";
 import { useCryptoIntent } from "@/hooks/useCryptoIntent";
 import { useCryptoPayable } from "@/hooks/useCryptoPayable";
 import { Button } from "@/components/ui/Button";
@@ -48,7 +49,7 @@ export default function CryptoWidget({ token, lang, onError, onBack }) {
   const [copied, setCopied] = useState(false);
   const copyTimer = useRef(null);
   const { createIntent } = useCryptoIntent();
-  const { checking, payable } = useCryptoPayable(token, asset, stage === "select");
+  const { checking, payable, minAmount, minCurrency } = useCryptoPayable(token, asset, stage === "select");
   const [left, setLeft] = useState(DEFAULT_TIMEOUT_SECONDS);
   const [qrSrc, setQrSrc] = useState("");
   const [saving, setSaving] = useState(false);
@@ -169,7 +170,11 @@ export default function CryptoWidget({ token, lang, onError, onBack }) {
         <>
           <p className="text-[11px] leading-relaxed text-[var(--ink-muted)]">{t(lang, "public.cryptoSelectHint")}</p>
           <CryptoAssetPicker value={asset} onChange={setAsset} lang={lang} />
-          {!payable ? <p className="text-xs text-[var(--danger)]">{t(lang, "public.payAmountMinimum")}</p> : null}
+          {!payable ? (
+            <p className="text-xs text-[var(--danger)]">
+              {t(lang, "public.belowMinimum", { amount: formatMoney(minAmount, minCurrency || "USD") })}
+            </p>
+          ) : null}
           <Button variant="accent" className="w-full" disabled={!asset || checking || !payable} onClick={startPayment}>
             {checking ? (
               <Loader2 size={16} className="animate-spin" />

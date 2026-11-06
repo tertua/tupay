@@ -104,7 +104,7 @@
  "pkg/routes/gateway_config_test.go": 148,
  "pkg/routes/gateway_intent_route_test.go": 62,
  "pkg/routes/gateway_methods_test.go": 40,
- "pkg/routes/gateway_public_methods_test.go": 351,
+ "pkg/routes/gateway_public_methods_test.go": 286,
  "pkg/routes/hardening_test.go": 147,
  "pkg/routes/health_routes.go": 14,
  "pkg/routes/idempotency_test.go": 104,

@@ -93,4 +93,5 @@ export const uiId = {
     "clients.portalRegenHint": "Tautan lama langsung tidak berlaku.",
     /* paid invoice — 58mm thermal receipt */
     "invoice.printReceipt": "Cetak struk (58mm)",
+    "public.belowMinimum": "Aset ini minimal {amount}.",
 };

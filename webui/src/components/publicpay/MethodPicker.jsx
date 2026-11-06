@@ -44,6 +44,7 @@ export default function MethodPicker({ methods, lang, onPick, pending, error }) 
       <div role="radiogroup" aria-label={t(lang, "public.chooseMethod")} className="space-y-2">
         {ordered.map((m) => {
           const active = m.id === selected;
+          const blocked = !!m.below_minimum;
           const Icon = METHOD_ICONS[m.id] || Wallet;
           const logo = PAY_LOGOS[m.id] || null;
           return (
@@ -52,10 +53,13 @@ export default function MethodPicker({ methods, lang, onPick, pending, error }) 
               type="button"
               role="radio"
               aria-checked={active}
-              onClick={() => setSelected(m.id)}
-              disabled={!!pending}
+              aria-disabled={blocked}
+              onClick={() => { if (!blocked) setSelected(m.id); }}
+              disabled={!!pending || blocked}
               className={`w-full flex items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-colors disabled:opacity-60 ${
-                active
+                blocked
+                  ? "border-[var(--border)] bg-[var(--surface)] cursor-not-allowed"
+                  : active
                   ? "border-[var(--accent)]/60 bg-[var(--accent-soft)]/40"
                   : "border-[var(--border)] bg-[var(--surface)] hover:border-[var(--accent)]/50 hover:bg-[var(--surface-2)]"
               }`}
@@ -69,7 +73,11 @@ export default function MethodPicker({ methods, lang, onPick, pending, error }) 
               </span>
               <span className="min-w-0 flex-1">
                 <span className="block text-sm font-semibold text-[var(--ink)] truncate">{m.name}</span>
-                <span className="block text-xs tabular text-[var(--ink-muted)]">{formatMoney(m.amount, m.currency)}</span>
+                <span className="block text-xs tabular text-[var(--ink-muted)]">
+                  {blocked
+                    ? t(lang, "public.belowMinimum", { amount: formatMoney(m.min_amount, m.currency) })
+                    : formatMoney(m.amount, m.currency)}
+                </span>
               </span>
               <span
                 className={`h-5 w-5 shrink-0 rounded-full border flex items-center justify-center transition-colors ${
