@@ -12,6 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/shopspring/decimal"
 	"github.com/tertua/tupay/app/models"
+	"github.com/tertua/tupay/app/queries"
 	"github.com/tertua/tupay/pkg/utils"
 	"github.com/tertua/tupay/platform/database"
 	"gorm.io/gorm"
@@ -124,20 +125,12 @@ func CreatePayment(c fiber.Ctx) error {
 	if !ok {
 		return nil
 	}
-	invoice, err := db.GetInvoice(orgID, invoiceID)
-	if err != nil {
+	if _, err := db.GetInvoice(orgID, invoiceID); err != nil {
 		return utils.NotFoundOrFailed(c, err, "invoice")
-	}
-	paid, err := db.PaidAmount(invoiceID)
-	if err != nil {
-		return utils.Fail(c, fiber.StatusInternalServerError, "failed to load invoice payments", nil)
 	}
 	// Money in flight locks manual payments: a concurrent manual record would settle against a different balance than the Snap intent.
 	if db.PendingInvoiceIDs(orgID)[invoiceID] {
 		return utils.Fail(c, fiber.StatusUnprocessableEntity, "invoice has a pending payment", nil)
-	}
-	if paid.Add(input.Amount).GreaterThan(invoice.Total) {
-		return utils.Fail(c, fiber.StatusBadRequest, "payment exceeds invoice balance", nil)
 	}
 	now := time.Now()
 	payment := &models.Payment{
@@ -152,19 +145,28 @@ func CreatePayment(c fiber.Ctx) error {
 		TxnID:     input.TxnID,
 		Notes:     input.Notes,
 	}
-	if err := db.CreatePayment(payment); err != nil {
-		return utils.Fail(c, fiber.StatusInternalServerError, "failed to create payment", nil)
-	}
-	// Auto-mark the invoice paid when payments now cover the total, so the
-	// stored status column stays in sync (display also uses effective_status).
-	if invoice.Status != models.InvoiceStatusPaid && paid.Add(input.Amount).GreaterThanOrEqual(invoice.Total) && invoice.Total.GreaterThan(decimal.Zero) {
-		_ = db.UpdateInvoiceStatus(orgID, invoiceID, models.InvoiceStatusPaid)
+	// The balance guard runs inside the insert transaction, so two payments
+	// recorded at once cannot together exceed the invoice total.
+	if err := db.CreatePaymentWithinBalance(payment); err != nil {
+		return paymentCreateFailure(c, err)
 	}
 	recordAudit(c, db, utils.CurrentActorID(c), "payment.create", "payment", payment.ID.String(),
 		`{"invoice_id":"`+invoiceID.String()+`","amount":"`+input.Amount.String()+`"}`)
 	invalidateAggregates(c, orgID)
 	enqueueOrgNotification(db, orgID, models.NotifEventPaymentCreated, "", paymentNotifData(db, *payment))
 	return utils.OK(c, fiber.StatusCreated, fiber.Map{"payment": paymentItemResponse(*payment)})
+}
+
+// paymentCreateFailure maps the transactional balance guard onto the envelope.
+func paymentCreateFailure(c fiber.Ctx, err error) error {
+	switch {
+	case errors.Is(err, queries.ErrPaymentExceedsBalance):
+		return utils.Fail(c, fiber.StatusBadRequest, "payment exceeds invoice balance", nil)
+	case errors.Is(err, sql.ErrNoRows):
+		return utils.Fail(c, fiber.StatusNotFound, "invoice not found", nil)
+	default:
+		return utils.Fail(c, fiber.StatusInternalServerError, "failed to create payment", nil)
+	}
 }
 
 // VoidPayment voids a payment owned by the current user instead of deleting
