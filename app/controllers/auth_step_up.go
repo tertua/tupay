@@ -74,6 +74,11 @@ func StepUp(c fiber.Ctx) error {
 	if err != nil {
 		return utils.NotFoundOrFailed(c, err, "user")
 	}
+	// Step-up verifies a password, so it shares the sign-in lockout: a stolen
+	// session cannot brute-force the password past the same threshold as login.
+	if remaining := loginLockRemaining(c.Context(), user.Email); remaining > 0 {
+		return loginLocked(c, remaining)
+	}
 	if err := confirmIdentity(db, user, input); err != nil {
 		return stepUpFailure(c, db, user, err)
 	}

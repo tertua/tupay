@@ -53,6 +53,27 @@ func TestStepUpRejectsWrongPassword(t *testing.T) {
 	assert.Equal(t, "step_up_invalid", details["code"])
 }
 
+// TestStepUpRespectsSignInLockout proves the step-up mint shares the per-account
+// lockout, so a stolen session cannot keep guessing the password past the same
+// threshold that locks login.
+func TestStepUpRespectsSignInLockout(t *testing.T) {
+	app := newTestApp()
+	admin := adminSession(t, app, "Step Lock", uniqueEmail("steplock"))
+
+	for i := 0; i < 5; i++ {
+		resp := doRequest(t, app, "POST", "/api/auth/step-up", stepUpBody("wrongpass"), admin)
+		require.Equal(t, http.StatusUnauthorized, resp.StatusCode)
+		resp.Body.Close()
+	}
+
+	// The correct password is refused too while the lock stands.
+	resp := doRequest(t, app, "POST", "/api/auth/step-up", stepUpBody("secret123"), admin)
+	require.Equal(t, http.StatusTooManyRequests, resp.StatusCode)
+	details := decodeBody(t, resp)["error"].(map[string]interface{})["details"].(map[string]interface{})
+	assert.Equal(t, "auth_locked", details["code"])
+	assert.NotEmpty(t, resp.Header.Get("Retry-After"))
+}
+
 // TestStepUpRequiresTOTPWhenEnrolled proves an enrolled account cannot step up
 // with the password alone.
 func TestStepUpRequiresTOTPWhenEnrolled(t *testing.T) {

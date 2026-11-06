@@ -2,6 +2,9 @@ package routes
 
 import (
 	"net/http"
+	"net/http/httptest"
+	"strings"
+	"sync"
 	"testing"
 	"time"
 
@@ -50,6 +53,61 @@ func cleanupUser(t *testing.T, email string) {
 	db, err := database.OpenDBConnection()
 	require.NoError(t, err)
 	require.NoError(t, db.InvoiceQueries.DB.Where("email = ?", email).Delete(&models.User{}).Error)
+}
+
+// loginOnce posts a login without the require-based helper, because a failed
+// assertion inside a goroutine is not allowed to abort the test.
+func loginOnce(app *fiber.App, body string) (int, error) {
+	req := httptest.NewRequest("POST", "/api/auth/login", strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	resp, err := app.Test(req, fiber.TestConfig{Timeout: 0, FailOnTimeout: false})
+	if err != nil {
+		return 0, err
+	}
+	resp.Body.Close()
+	return resp.StatusCode, nil
+}
+
+// TestTOTPCodeClaimOneShot proves a live code mints exactly one session even
+// when two logins race on it: the step claim is a compare-and-set, so the loser
+// is refused instead of riding the same window.
+func TestTOTPCodeClaimOneShot(t *testing.T) {
+	app := newTestApp()
+	email := uniqueEmail("totprace")
+	cookies := adminSession(t, app, "Totp Race", email)
+	secret := enrollTOTP(t, app, cookies)
+	body := `{"email":"` + email + `","password":"secret123","code":"` + totpCodeIn(t, secret, 1) + `"}`
+
+	var wg sync.WaitGroup
+	codes := make(chan int, 2)
+	errs := make(chan error, 2)
+	for i := 0; i < 2; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			status, err := loginOnce(app, body)
+			if err != nil {
+				errs <- err
+				return
+			}
+			codes <- status
+		}()
+	}
+	wg.Wait()
+	close(codes)
+	close(errs)
+
+	for err := range errs {
+		t.Fatalf("concurrent login failed: %v", err)
+	}
+	counts := map[int]int{}
+	for status := range codes {
+		counts[status]++
+	}
+	assert.Equal(t, 1, counts[http.StatusOK], "exactly one login may spend the code")
+	assert.Equal(t, 1, counts[http.StatusUnauthorized], "the loser must be refused")
+
+	cleanupUser(t, email)
 }
 
 // TestTOTPEnrollAndLoginFlow covers the second factor end to end: enrollment

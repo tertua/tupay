@@ -83,7 +83,14 @@ func consumeTOTP(db *database.Queries, userID uuid.UUID, code string, requireAct
 	if !ok {
 		return errTOTPInvalid
 	}
-	return db.SetTOTPLastStep(userID, step)
+	claimed, err := db.ClaimTOTPStep(userID, step)
+	if err != nil {
+		return err
+	}
+	if !claimed {
+		return errTOTPInvalid
+	}
+	return nil
 }
 
 // TOTPStatus reports whether the session account has an active second factor.

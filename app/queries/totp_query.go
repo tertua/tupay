@@ -59,10 +59,12 @@ func (q *TOTPQueries) DeleteTOTP(userID uuid.UUID) error {
 	return q.Where("user_id = ?", userID).Delete(&models.UserTOTP{}).Error
 }
 
-// SetTOTPLastStep records the step a code was spent on, so the same code
-// cannot be replayed inside its validity window.
-func (q *TOTPQueries) SetTOTPLastStep(userID uuid.UUID, step int64) error {
-	return q.Model(&models.UserTOTP{}).
-		Where("user_id = ?", userID).
-		Updates(map[string]any{"last_used_step": step, "updated_at": time.Now()}).Error
+// ClaimTOTPStep records the step a code was spent on only while that step is
+// still ahead of the stored one, so two requests racing on the same code cannot
+// both be accepted. It reports whether this caller won the claim.
+func (q *TOTPQueries) ClaimTOTPStep(userID uuid.UUID, step int64) (bool, error) {
+	res := q.Model(&models.UserTOTP{}).
+		Where("user_id = ? AND last_used_step < ?", userID, step).
+		Updates(map[string]any{"last_used_step": step, "updated_at": time.Now()})
+	return res.RowsAffected > 0, res.Error
 }
