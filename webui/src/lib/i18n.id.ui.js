@@ -91,4 +91,6 @@ export const uiId = {
     "clients.portalRevoke": "Cabut",
     "clients.portalRevoked": "Tautan dicabut",
     "clients.portalRegenHint": "Tautan lama langsung tidak berlaku.",
+    /* paid invoice — 58mm thermal receipt */
+    "invoice.printReceipt": "Cetak struk (58mm)",
 };

@@ -93,4 +93,6 @@ export const uiEn = {
     "clients.portalRevoke": "Revoke",
     "clients.portalRevoked": "Link revoked",
     "clients.portalRegenHint": "The old link stops working immediately.",
+    /* paid invoice — 58mm thermal receipt */
+    "invoice.printReceipt": "Print receipt (58mm)",
 };

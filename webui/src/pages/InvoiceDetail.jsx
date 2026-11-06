@@ -1,22 +1,18 @@
 import { useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
-  Pencil,
-  Trash2,
   Loader2,
   Send,
   Undo2,
   Mail,
 } from "lucide-react";
-import { Button } from "@/components/ui/Button";
 import { StatusBadge } from "@/components/ui/Badge";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { InvoicePdfDownload } from "@/components/invoice/InvoicePdfDownload";
+import { InvoiceDetailActions } from "@/components/invoice/InvoiceDetailActions";
 import { InvoicePreview } from "@/components/invoice/InvoicePreview";
 import { InvoicePaymentCard } from "@/components/invoice/InvoicePaymentCard";
 import { InvoiceReminderCard } from "@/components/invoice/InvoiceReminderCard";
 import { InvoiceStatusActions } from "@/components/invoice/InvoiceStatusActions";
-import { InvoiceSendEmailButton } from "@/components/invoice/InvoiceSendEmailButton";
 import { InvoiceStatusButton, InvoiceClientCard } from "@/components/invoice/InvoiceDetailParts";
 import {
   useInvoice,
@@ -30,7 +26,7 @@ import { formatMoney } from "@/lib/utils";
 export default function InvoiceDetail() {
   const { id } = useParams();
   const nav = useNavigate();
-  const { t, lang } = useLang();
+  const { t } = useLang();
   const { data: invoice, isLoading, error } = useInvoice(id);
   const { data: settings } = useSettings();
   const setStatus = useSetInvoiceStatus();
@@ -93,26 +89,13 @@ export default function InvoiceDetail() {
           </div>
         </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          <InvoicePdfDownload invoice={invoice} settings={settings} lang={lang} label="PDF" />
-          <InvoiceSendEmailButton invoice={invoice} />
-          {canEdit && (
-          <Button variant="outline" onClick={() => nav(`/invoices/${id}/edit`)}>
-            <Pencil size={15} /> {t("common.edit")}
-          </Button>
-          )}
-          {canDelete ? (
-          <Button
-            variant="ghost"
-            onClick={onDelete}
-            aria-label={t("common.delete")}
-            title={t("common.delete")}
-            className="text-[var(--danger)] hover:bg-[var(--danger)]/10"
-          >
-            <Trash2 size={15} />
-          </Button>
-          ) : null}
-        </div>
+        <InvoiceDetailActions
+          invoice={invoice}
+          settings={settings}
+          canEdit={canEdit}
+          canDelete={canDelete}
+          onDelete={onDelete}
+        />
       </div>
 
       {isPaid || (st === "pending" && invoice.status !== "pending") ? (
