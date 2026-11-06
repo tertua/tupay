@@ -52,19 +52,20 @@ func StoreStepUp(ctx context.Context, token, value string, ttl time.Duration) er
 	return store.Set(ctx, StepUpKey(token), value, ttl)
 }
 
-// ConsumeStepUp deletes and returns the payload of a token in one step: the
+// ConsumeStepUp takes a token out of the store in one atomic step: the
 // elevation is spent whether or not the caller ends up using it, so a captured
-// token cannot be replayed after a failed attempt.
+// token cannot be replayed — not even by a concurrent pair of requests.
 func ConsumeStepUp(ctx context.Context, token string) (string, bool) {
 	store, err := Sessions()
 	if err != nil {
 		return "", false
 	}
-	value, err := store.Get(ctx, StepUpKey(token))
-	if err != nil {
+	taker, ok := store.(takeStore)
+	if !ok {
 		return "", false
 	}
-	if err := store.Delete(ctx, StepUpKey(token)); err != nil {
+	value, err := taker.Take(ctx, StepUpKey(token))
+	if err != nil {
 		return "", false
 	}
 	return value, true

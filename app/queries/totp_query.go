@@ -24,13 +24,14 @@ func (q *TOTPQueries) GetTOTP(userID uuid.UUID) (models.UserTOTP, error) {
 
 // TOTPEnrolled reports whether an account has an activated second factor. A
 // pending (unactivated) enrollment does not count, so login stays single-factor
-// until the user proves the authenticator works.
-func (q *TOTPQueries) TOTPEnrolled(userID uuid.UUID) bool {
+// until the user proves the authenticator works.  It fails closed: a DB error
+// is returned so the caller can refuse the request instead of bypassing the gate.
+func (q *TOTPQueries) TOTPEnrolled(userID uuid.UUID) (bool, error) {
 	var count int64
 	err := q.Model(&models.UserTOTP{}).
 		Where("user_id = ? AND activated_at IS NOT NULL", userID).
 		Count(&count).Error
-	return err == nil && count > 0
+	return err == nil && count > 0, err
 }
 
 // UpsertTOTP stores a fresh (unactivated) secret, replacing any pending row so

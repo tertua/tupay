@@ -1,10 +1,15 @@
 package cache
 
 import (
+	"context"
+	"errors"
+	"sync"
 	"testing"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestStepUpKey(t *testing.T) {
@@ -52,4 +57,76 @@ func TestStepUpValueMalformed(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestMemoryTakeAtomic proves Take is single-use: a second call on the same key
+// returns ErrSessionNotFound.
+func TestMemoryTakeAtomic(t *testing.T) {
+	store := newMemoryStore()
+	ctx := context.Background()
+	key := "auth:stepup:test-token"
+	want := EncodeStepUpValue(uuid.New(), "sid-1", time.Now().Add(time.Hour))
+
+	require.NoError(t, store.Set(ctx, key, want, time.Hour))
+
+	got, err := store.Take(ctx, key)
+	require.NoError(t, err)
+	assert.Equal(t, want, got)
+
+	_, err = store.Take(ctx, key)
+	assert.ErrorIs(t, err, ErrSessionNotFound)
+}
+
+// TestMemoryTakeExpired proves an expired key is treated as absent.
+// We insert directly into the map so Set does not overwrite the past expiry.
+func TestMemoryTakeExpired(t *testing.T) {
+	store := newMemoryStore()
+	ctx := context.Background()
+	key := "auth:stepup:expired-token"
+	want := EncodeStepUpValue(uuid.New(), "sid-1", time.Now().Add(-time.Hour))
+
+	// Insert directly so the expiry is already in the past.
+	store.items[key] = memoryEntry{value: want, expires: time.Now().Add(-time.Hour)}
+
+	_, err := store.Take(ctx, key)
+	assert.ErrorIs(t, err, ErrSessionNotFound)
+}
+
+// TestMemoryTakeConcurrent races two goroutines on the same key; exactly one
+// must succeed and the other must get ErrSessionNotFound.
+func TestMemoryTakeConcurrent(t *testing.T) {
+	store := newMemoryStore()
+	ctx := context.Background()
+	key := "auth:stepup:race-token"
+	want := EncodeStepUpValue(uuid.New(), "sid-1", time.Now().Add(time.Hour))
+	require.NoError(t, store.Set(ctx, key, want, time.Hour))
+
+	results := make(chan error, 2)
+	var wg sync.WaitGroup
+	wg.Add(2)
+
+	for i := 0; i < 2; i++ {
+		go func() {
+			defer wg.Done()
+			_, err := store.Take(ctx, key)
+			results <- err
+		}()
+	}
+	wg.Wait()
+	close(results)
+
+	var wins, loses int
+	for err := range results {
+		switch {
+		case err == nil:
+			wins++
+		case errors.Is(err, ErrSessionNotFound):
+			loses++
+		default:
+			t.Fatalf("unexpected error: %v", err)
+		}
+	}
+
+	assert.Equal(t, 1, wins, "exactly one goroutine must win")
+	assert.Equal(t, 1, loses, "exactly one goroutine must lose")
 }

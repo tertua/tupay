@@ -103,7 +103,11 @@ func TOTPStatus(c fiber.Ctx) error {
 	if !ok {
 		return nil
 	}
-	return utils.OK(c, fiber.StatusOK, fiber.Map{"totp": models.TOTPStatus{Enabled: db.TOTPEnrolled(userID)}})
+	enabled, err := db.TOTPEnrolled(userID)
+	if err != nil {
+		return utils.Fail(c, fiber.StatusInternalServerError, "failed to read two-factor status", nil)
+	}
+	return utils.OK(c, fiber.StatusOK, fiber.Map{"totp": models.TOTPStatus{Enabled: enabled}})
 }
 
 // EnrollTOTP mints a fresh TOTP secret for the session account and returns the
@@ -125,7 +129,11 @@ func EnrollTOTP(c fiber.Ctx) error {
 	if !ok {
 		return nil
 	}
-	if db.TOTPEnrolled(userID) {
+	enrolled, err := db.TOTPEnrolled(userID)
+	if err != nil {
+		return utils.Fail(c, fiber.StatusInternalServerError, "failed to read two-factor status", nil)
+	}
+	if enrolled {
 		return utils.Fail(c, fiber.StatusConflict, "two-factor authentication is already enabled", nil)
 	}
 	user, err := db.GetUserByID(userID)

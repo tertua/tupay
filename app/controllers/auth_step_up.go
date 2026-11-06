@@ -33,6 +33,10 @@ type StepUpResponse struct {
 // SSO without TOTP), so the destructive action must stay refused.
 var errStepUpUnavailable = errors.New("no second factor available")
 
+// errStepUpCodeRequired means a password account has TOTP enrolled but the
+// step-up request did not supply a code.
+var errStepUpCodeRequired = errors.New("authenticator code required")
+
 // errStepUpInvalid covers a wrong password or a wrong/replayed code; the
 // caller must not learn which one failed.
 var errStepUpInvalid = errors.New("wrong step-up credential")
@@ -70,7 +74,7 @@ func StepUp(c fiber.Ctx) error {
 	if err != nil {
 		return utils.NotFoundOrFailed(c, err, "user")
 	}
-	if err := confirmIdentity(c, db, user, input); err != nil {
+	if err := confirmIdentity(db, user, input); err != nil {
 		return stepUpFailure(c, db, user, err)
 	}
 	sid, err := liveSessionID(c, userID)
@@ -87,24 +91,38 @@ func StepUp(c fiber.Ctx) error {
 	})
 }
 
-// confirmIdentity verifies whichever factors the account actually has.
-func confirmIdentity(c fiber.Ctx, db *database.Queries, user models.User, input *StepUpInput) error {
+// confirmIdentity verifies whichever factors the account actually has.  It
+// fails closed: a DB error propagates so the caller can refuse the request.
+func confirmIdentity(db *database.Queries, user models.User, input *StepUpInput) error {
 	if user.PasswordHash == "" {
 		if input.Code == "" {
 			return errStepUpUnavailable
 		}
-		return consumeTOTP(db, user.ID, input.Code, true)
+		return stepUpFactorError(consumeTOTP(db, user.ID, input.Code, true))
 	}
 	if !utils.ComparePasswords(user.PasswordHash, input.Password) {
 		return errStepUpInvalid
 	}
+	enrolled, err := db.TOTPEnrolled(user.ID)
+	if err != nil {
+		return err
+	}
 	if input.Code == "" {
-		if db.TOTPEnrolled(user.ID) {
-			return errTOTPNotEnrolled
+		if enrolled {
+			return errStepUpCodeRequired
 		}
 		return nil
 	}
-	return consumeTOTP(db, user.ID, input.Code, true)
+	return stepUpFactorError(consumeTOTP(db, user.ID, input.Code, true))
+}
+
+// stepUpFactorError keeps a missing factor from leaking as a code failure: an
+// account without an active second factor has nothing to confirm with.
+func stepUpFactorError(err error) error {
+	if errors.Is(err, errTOTPNotEnrolled) {
+		return errStepUpUnavailable
+	}
+	return err
 }
 
 // stepUpFailure maps a confirmation error onto the API envelope, counting a
@@ -113,7 +131,7 @@ func stepUpFailure(c fiber.Ctx, db *database.Queries, user models.User, err erro
 	switch {
 	case errors.Is(err, errStepUpUnavailable):
 		return utils.Fail(c, fiber.StatusForbidden, "this account has no second factor configured", fiber.Map{"code": "step_up_unavailable"})
-	case errors.Is(err, errTOTPNotEnrolled):
+	case errors.Is(err, errStepUpCodeRequired):
 		return utils.Fail(c, fiber.StatusUnauthorized, "authenticator code required", fiber.Map{"code": "totp_required"})
 	case errors.Is(err, errTOTPInvalid):
 		recordBadCredential(c, db, user.Email, "step_up", user.ID)
@@ -163,7 +181,12 @@ func mintStepUp(c fiber.Ctx, userID uuid.UUID, sid string) (string, error) {
 // must present a live code, and a missing or wrong one counts as a bad
 // credential so guessing codes hits the same lockout as guessing passwords.
 func requireLoginTOTP(c fiber.Ctx, db *database.Queries, user models.User, code string) bool {
-	if !db.TOTPEnrolled(user.ID) {
+	enrolled, err := db.TOTPEnrolled(user.ID)
+	if err != nil {
+		_ = utils.Fail(c, fiber.StatusInternalServerError, "failed to verify second factor", nil)
+		return true
+	}
+	if !enrolled {
 		return false
 	}
 	if code == "" {
