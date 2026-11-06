@@ -7,7 +7,7 @@ import "github.com/tertua/tupay/app/models"
 // size baseline after new models are added.
 func autoMigrateList() []any {
 	return []any{
-		&models.User{}, &models.UserIdentity{},
+		&models.User{}, &models.UserIdentity{}, &models.UserTOTP{},
 		&models.Client{},
 		&models.Invoice{},
 		&models.InvoiceItem{},

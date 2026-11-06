@@ -43,6 +43,9 @@ func (c Config) validateLimits() error {
 		return fmt.Errorf("invalid AUTH_LOCKOUT_BASE_SECONDS %d: must be <= AUTH_LOCKOUT_MAX_SECONDS %d",
 			c.Auth.LockoutBaseSec, c.Auth.LockoutMaxSec)
 	}
+	if c.Auth.StepUpSec < 60 || c.Auth.StepUpSec > 900 {
+		return fmt.Errorf("invalid AUTH_STEP_UP_SECONDS %d: must be 60-900", c.Auth.StepUpSec)
+	}
 	if c.Redis.Enabled() {
 		if port, err := strconv.Atoi(c.Redis.Port); err != nil || port < 1 || port > 65535 {
 			return fmt.Errorf("invalid REDIS_PORT %q: must be 1-65535", c.Redis.Port)

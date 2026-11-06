@@ -1,29 +1,12 @@
 import axios from "axios";
 import { localizeApiError } from "@/lib/utils";
 import { broadcastCaptchaReset, shouldResetCaptcha } from "./captchaReset";
+import { isStepUpRefusal, shouldBroadcastExpired } from "./authExpiry";
 
 // Broadcast when an authenticated call fails with 401 so the app can
 // drop the stale user and bounce to /login without a manual reload.
 // AuthContext listens for this; ProtectedShell then redirects.
 export const AUTH_EXPIRED_EVENT = "tupay:auth-expired";
-
-// 401s that are part of a normal unauthenticated flow — they must stay
-// inline (e.g. wrong password) and never trigger a global logout.
-const AUTH_EXPIRED_EXCLUSIONS = [
-  "/auth/login",
-  "/auth/register",
-  "/auth/forgot-password",
-  "/auth/reset-password",
-  "/auth/me",
-  "/auth/logout",
-  "/config",
-  "/public/",
-];
-
-function shouldBroadcastExpired(url) {
-  if (typeof url !== "string" || !url) return true;
-  return !AUTH_EXPIRED_EXCLUSIONS.some((excluded) => url.includes(excluded));
-}
 
 export function broadcastAuthExpired() {
   try {
@@ -74,7 +57,8 @@ apiClient.interceptors.response.use(
   (res) => res,
   (err) => {
     const status = err.response?.status;
-    if (status === 401 && shouldBroadcastExpired(err.config?.url)) {
+    const stepUpRefusal = isStepUpRefusal(err);
+    if (status === 401 && !stepUpRefusal && shouldBroadcastExpired(err.config?.url)) {
       broadcastAuthExpired();
     }
     if (shouldResetCaptcha(err.config?.url)) broadcastCaptchaReset();
@@ -87,6 +71,7 @@ apiClient.interceptors.response.use(
       status,
       message,
       details: err.response?.data?.error?.details,
+      stepUpRequired: stepUpRefusal,
       original: err,
     });
   }

@@ -35,14 +35,6 @@ export function useUpdateGatewayProject() {
   return useGatewayMutation(({ slug, payload }) => adminApi.updateGatewayProject(slug, payload), [gatewayProjectsKey]);
 }
 
-export function useRotateGatewayKey() {
-  return useGatewayMutation(adminApi.rotateGatewayKey, [gatewayProjectsKey]);
-}
-
-export function useRotateGatewaySecret() {
-  return useGatewayMutation(adminApi.rotateGatewaySecret, [gatewayProjectsKey]);
-}
-
 export function useRetryGatewayDelivery() {
   return useGatewayMutation(adminApi.retryGatewayDelivery, [gatewayDeliveriesKey]);
 }

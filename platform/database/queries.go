@@ -9,6 +9,7 @@ import (
 type Queries struct {
 	*queries.UserQueries              // load queries from User model
 	*queries.UserIdentityQueries      // load queries from UserIdentity model (OIDC SSO)
+	*queries.TOTPQueries              // load queries from UserTOTP model (second factor)
 	*queries.ClientQueries            // load queries from Client model
 	*queries.InvoiceQueries           // load queries from Invoice model
 	*queries.ClientPortalQueries      // load queries for the public client portal
@@ -37,6 +38,7 @@ func newQueries(db *gorm.DB) *Queries {
 	return &Queries{
 		UserQueries:              &queries.UserQueries{DB: db},              // from User model
 		UserIdentityQueries:      &queries.UserIdentityQueries{DB: db},      // from UserIdentity model (OIDC SSO)
+		TOTPQueries:              &queries.TOTPQueries{DB: db},              // from UserTOTP model (second factor)
 		ClientQueries:            &queries.ClientQueries{DB: db},            // from Client model
 		InvoiceQueries:           &queries.InvoiceQueries{DB: db},           // from Invoice model
 		ClientPortalQueries:      &queries.ClientPortalQueries{DB: db},      // public client portal

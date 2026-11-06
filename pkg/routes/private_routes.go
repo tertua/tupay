@@ -20,10 +20,7 @@ func PrivateRoutesAt(a *fiber.App, prefix string) {
 	route := a.Group(prefix, middleware.GeneralLimiter(), middleware.AuthRequired(), middleware.OrgContext(), middleware.RequireCSRF())
 
 	// Auth session routes:
-	route.Get("/auth/me", controllers.Me)                     // get current session user
-	route.Patch("/auth/profile", controllers.UpdateProfile)   // update display name
-	route.Patch("/auth/password", controllers.ChangePassword) // change password
-	route.Post("/auth/logout", controllers.Logout)            // end session
+	registerAuthSessionRoutes(route)
 
 	// Client routes (CRUD + owner-only portal link lifecycle):
 	registerClientRoutes(route)

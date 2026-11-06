@@ -15,6 +15,6 @@ func registerAdminRoutes(a *fiber.App, prefix string) {
 	admin.Delete("/users/:id", controllers.DeleteUser)
 	admin.Get("/audit-logs", controllers.ListAuditLogs)
 	admin.Post("/orgs", controllers.CreateOrg)
-	admin.Post("/migrate/down", controllers.MigrateDown)
+	admin.Post("/migrate/down", middleware.RequireStepUp(), controllers.MigrateDown)
 	admin.Get("/outbox/status", controllers.OutboxStatus)
 }

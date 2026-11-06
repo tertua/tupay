@@ -45,8 +45,9 @@ func TestGatewaySecretSealedAtRest(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, raw, opened, "the sealed value must open back to the revealed secret")
 
-	// Rotation mints a new secret and re-seals it.
-	resp = doRequest(t, app, "POST", "/api/admin/gateway/projects/"+slug+"/rotate-secret", "", admin)
+	// Rotation mints a new secret and re-seals it (step-up guarded).
+	resp = doStepUpRequest(t, app, "POST", "/api/admin/gateway/projects/"+slug+"/rotate-secret", "", admin,
+		mintStepUp(t, app, stepUpBody("secret123"), admin))
 	require.Equal(t, http.StatusOK, resp.StatusCode)
 	rotated, _ := decodeBody(t, resp)["project"].(map[string]interface{})["webhook_secret"].(string)
 	require.NotEmpty(t, rotated)

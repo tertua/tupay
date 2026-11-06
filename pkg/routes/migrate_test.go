@@ -9,9 +9,10 @@ import (
 	"github.com/tertua/tupay/platform/database"
 )
 
-// TestMigrateDownFlow covers the admin schema-rollback endpoint: validation,
-// refusal, roles, and the round trip. The shared test database is restored
-// to the current version at the end so later flow tests keep their columns.
+// TestMigrateDownFlow covers the admin schema-rollback endpoint: step-up,
+// validation, refusal, roles, and the round trip. The shared test database is
+// restored to the current version at the end so later flow tests keep their
+// columns.
 func TestMigrateDownFlow(t *testing.T) {
 	defer func() {
 		require.NoError(t, database.Migrate())
@@ -20,32 +21,31 @@ func TestMigrateDownFlow(t *testing.T) {
 	app := newTestApp()
 	adminCookies := adminSession(t, app, "Mig Admin", "migadmin@example.com")
 
+	// The route is step-up guarded: no token is refused before any parsing.
+	resp := doStepUpRequest(t, app, "POST", "/api/admin/migrate/down",
+		`{"target_version":1,"confirm":false}`, adminCookies, "")
+	assert.Equal(t, 401, resp.StatusCode)
+	decodeBody(t, resp)
+
 	// Confirmation is mandatory.
-	resp := doRequest(t, app, "POST", "/api/admin/migrate/down",
-		`{"target_version":1,"confirm":false}`, adminCookies)
+	resp = doStepUpRequest(t, app, "POST", "/api/admin/migrate/down",
+		`{"target_version":1,"confirm":false}`, adminCookies, mintStepUp(t, app, stepUpBody("secret123"), adminCookies))
 	assert.Equal(t, 400, resp.StatusCode)
 	decodeBody(t, resp)
 
 	// Non-admins are rejected by roles, not version logic — before rollback, since v1 lacks new columns.
-	resp = doRequest(t, app, "POST", "/api/auth/register",
-		`{"name":"Mig User","email":"miguser@example.com","password":"secret123"}`, nil)
-	require.True(t, resp.StatusCode == 201 || resp.StatusCode == 409)
-	resp.Body.Close()
-	resp = doRequest(t, app, "POST", "/api/auth/login",
-		`{"email":"miguser@example.com","password":"secret123"}`, nil)
-	require.Equal(t, 200, resp.StatusCode)
-	role := decodeBody(t, resp)["user"].(map[string]interface{})["role"].(string)
-	require.NotEqual(t, "admin", role)
-	userCookies := resp.Cookies()
-	resp.Body.Close()
+	userCookies := plainUserSession(t, app, "Mig User", "miguser@example.com")
 	resp = doRequest(t, app, "POST", "/api/admin/migrate/down",
 		`{"target_version":1,"confirm":true}`, userCookies)
 	assert.Equal(t, 403, resp.StatusCode)
 	decodeBody(t, resp)
 
-	// Roll back to v1.
-	resp = doRequest(t, app, "POST", "/api/admin/migrate/down",
-		`{"target_version":1,"confirm":true}`, adminCookies)
+	// Roll back to v1. Both tokens are minted first: a rollback to v1 drops the
+	// columns the confirmation reads, so no token can be minted afterwards.
+	rollbackToken := mintStepUp(t, app, stepUpBody("secret123"), adminCookies)
+	retryToken := mintStepUp(t, app, stepUpBody("secret123"), adminCookies)
+	resp = doStepUpRequest(t, app, "POST", "/api/admin/migrate/down",
+		`{"target_version":1,"confirm":true}`, adminCookies, rollbackToken)
 	assert.Equal(t, 200, resp.StatusCode)
 	body := decodeBody(t, resp)
 	assert.Equal(t, float64(1), body["version"])
@@ -54,8 +54,8 @@ func TestMigrateDownFlow(t *testing.T) {
 	assert.Equal(t, 1, stamp)
 
 	// Same target again is refused.
-	resp = doRequest(t, app, "POST", "/api/admin/migrate/down",
-		`{"target_version":1,"confirm":true}`, adminCookies)
+	resp = doStepUpRequest(t, app, "POST", "/api/admin/migrate/down",
+		`{"target_version":1,"confirm":true}`, adminCookies, retryToken)
 	assert.Equal(t, 400, resp.StatusCode)
 	decodeBody(t, resp)
 

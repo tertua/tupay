@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { ArrowRight, ArrowLeft, Loader2, Mail, Lock } from "lucide-react";
+import { ArrowRight, ArrowLeft, Loader2, Mail, Lock, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 
@@ -24,12 +24,15 @@ export function LoginForm({ login, nav, location, sessionExpired, clearSessionEx
   // code falls back to the generic provider message.
   const oidcCode = searchParams.get("oidc_error");
   const oidcError = oidcCode ? t(`auth.oidcError.${oidcCode}`) : "";
-  const [form, setForm] = useState({ email: "", password: "" });
+  const [form, setForm] = useState({ email: "", password: "", code: "" });
   const [captchaToken, setCaptchaToken] = useState("");
   const [err, setErr] = useState("");
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [pendingVerification, setPendingVerification] = useState(false);
+  // needsTOTP switches the form into its second step: the backend answered
+  // 401 totp_required, so the same credentials are resubmitted with a code.
+  const [needsTOTP, setNeedsTOTP] = useState(false);
   const queryClient = useQueryClient();
 
   async function onSubmit(e) {
@@ -47,6 +50,12 @@ export function LoginForm({ login, nav, location, sessionExpired, clearSessionEx
       // The interceptor localizes the message, so the raw backend text (on the
       // original error) tells a pending account apart from a blocked one.
       const raw = e.original?.response?.data?.error?.message || "";
+      const code = e.details?.code;
+      if (code === "totp_required" || code === "totp_invalid") {
+        setNeedsTOTP(true);
+        setErr(code === "totp_invalid" ? t("auth.totpInvalid") : t("security.totpRequired"));
+        return;
+      }
       setPendingVerification(e.status === 403 && raw === "account is pending verification");
       setErr(e.message || t("auth.loginFailed"));
     } finally {
@@ -108,6 +117,19 @@ export function LoginForm({ login, nav, location, sessionExpired, clearSessionEx
             </Link>
           }
         />
+
+        {needsTOTP && (
+          <AuthField
+            label={t("security.totpCode")}
+            type="text"
+            inputMode="numeric"
+            autoComplete="one-time-code"
+            value={form.code}
+            onChange={(v) => setForm((current) => ({ ...current, code: v.replace(/\D/g, "").slice(0, 6) }))}
+            icon={ShieldCheck}
+            placeholder="000000"
+          />
+        )}
 
         <AuthErrorBanner>{err || oidcError}</AuthErrorBanner>
         {pendingVerification && (

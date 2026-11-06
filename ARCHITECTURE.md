@@ -455,6 +455,14 @@ make db.restore FILE=<path|latest>  # replace DB from a snapshot (stop the backe
 - Gateway: 120 req/min
 - Per-account sign-in lockout (bukan pengganti limit di atas): `AUTH_LOCKOUT_THRESHOLD` password salah dalam satu jendela meng-arm lock `AUTH_LOCKOUT_BASE_SECONDS` yang berlipat sampai `AUTH_LOCKOUT_MAX_SECONDS` (sekaligus lebar jendela). Counter di-key dari hash email, jadi alamat tak terdaftar menerima 429 yang sama (anti-enumerasi); 429 membawa `Retry-After`; login sukses atau reset password membersihkan counter; cache mati fail-open karena limiter IP tetap jalan.
 
+**Second factor (TOTP) + step-up**
+- TOTP (RFC 6238, 6 digit, SHA1, 30 detik, skew ±1 step) via `github.com/pquerna/otp`. `SchemaVersion` 27 menambah `user_totps` (PK `user_id`, secret tersegel + `last_used_step`).
+- Enroll → `POST /auth/totp/enroll` mengembalikan secret + `otpauth://` URL sekali (409 kalau sudah aktif); `POST /auth/totp/activate` mengonfirmasi dengan kode pertama; `POST /auth/totp/disable` butuh password **dan** kode; `GET /auth/totp` membaca status. Secret disegel `relay.SealSecret` seperti webhook secret.
+- Login: akun yang sudah enroll wajib mengirim `code` di request login yang sama. Kode kosong → 401 `details.code=totp_required`, salah/terpakai → `totp_invalid`; keduanya dihitung sebagai bad credential sehingga menabrak lockout yang sama dengan password salah.
+- Anti-replay: `matchTOTPStep` mencocokkan step saat ini, -1, +1 secara constant-time lalu menyimpan step yang terpakai; kode dengan step `<= last_used_step` ditolak.
+- **Step-up**: `POST /auth/step-up` (password, dan kode bila TOTP aktif) mengeluarkan token 32 byte hex berumur `AUTH_STEP_UP_SECONDS` (default 300, 60–900) yang disimpan di `cache.Sessions()` sebagai `auth:stepup:<token>` → `userID|sid|expiry`. `RequireStepUp` (header `X-Step-Up-Token`) menghapus token sebelum handler jalan (single-use), mencocokkan user + sid sesi aktif, dan menolak dengan 401 `details.code=step_up_required` — frontend membuka prompt, bukan logout.
+- Route yang dijaga: `POST /admin/migrate/down`, `POST /admin/gateway/projects/:slug/rotate-key`, `POST /admin/gateway/projects/:slug/rotate-secret`. Akun SSO tanpa password hanya bisa step-up dengan TOTP; tanpa TOTP → 403 `step_up_unavailable`.
+
 **CAPTCHA** (Cloudflare Turnstile, optional)
 - Login/register/forgot-password
 - Server: `TURNSTILE_SECRET` (runtime env)

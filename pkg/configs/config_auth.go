@@ -9,6 +9,13 @@ type AuthConfig struct {
 	LockoutThreshold         int  // AUTH_LOCKOUT_THRESHOLD
 	LockoutBaseSec           int  // AUTH_LOCKOUT_BASE_SECONDS
 	LockoutMaxSec            int  // AUTH_LOCKOUT_MAX_SECONDS
+	StepUpSec                int  // AUTH_STEP_UP_SECONDS
+}
+
+// StepUp is the lifetime of a step-up token: short by design, since it stands
+// in for re-authentication on one destructive request.
+func (a AuthConfig) StepUp() time.Duration {
+	return time.Duration(a.StepUpSec) * time.Second
 }
 
 // LockoutBase is the lock armed by the first failure past the threshold.
@@ -31,5 +38,6 @@ func loadAuth(intEnv func(string, int) int) AuthConfig {
 		LockoutThreshold:         intEnv("AUTH_LOCKOUT_THRESHOLD", 5),
 		LockoutBaseSec:           intEnv("AUTH_LOCKOUT_BASE_SECONDS", 60),
 		LockoutMaxSec:            intEnv("AUTH_LOCKOUT_MAX_SECONDS", 900),
+		StepUpSec:                intEnv("AUTH_STEP_UP_SECONDS", 300),
 	}
 }

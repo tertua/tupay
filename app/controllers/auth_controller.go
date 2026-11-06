@@ -78,6 +78,11 @@ func Login(c fiber.Ctx) error {
 	if gateAccountStatus(c, db, user) {
 		return nil
 	}
+	// Second factor: an enrolled account must present a live code in the same
+	// request; a missing or wrong one is a bad credential, not a new prompt.
+	if requireLoginTOTP(c, db, user, payload.Code) {
+		return nil
+	}
 
 	if _, err := startSession(c, db, user.ID, loginOrgHint(db, user.ID)); err != nil {
 		return utils.Fail(c, fiber.StatusInternalServerError, "failed to start session", nil)

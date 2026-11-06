@@ -313,4 +313,13 @@ var migrations = []Migration{
 			return db.Migrator().DropColumn(&models.Client{}, "status")
 		},
 	},
+	{
+		Version:     27,
+		Description: "TOTP second factor (user_totps)",
+		// Fresh additive table: Down drops it; AutoMigrate recreates it on the
+		// next startup with this binary (forward upgrades run via AutoMigrate).
+		Down: func(db *gorm.DB) error {
+			return db.Migrator().DropTable(&models.UserTOTP{})
+		},
+	},
 }

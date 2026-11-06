@@ -14,11 +14,6 @@ type Register struct {
 	InviteToken string `json:"invite_token,omitempty" validate:"omitempty"`
 }
 
-type Login struct {
-	Email    string `json:"email" validate:"required,email,lte=255"`
-	Password string `json:"password" validate:"required,lte=255"`
-}
-
 // UpdateProfile struct to describe update profile payload.
 type UpdateProfile struct {
 	Name string `json:"name" validate:"required,lte=255"`

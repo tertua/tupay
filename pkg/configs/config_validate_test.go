@@ -161,6 +161,36 @@ func TestAIUnification(t *testing.T) {
 	assert.Contains(t, string(src), "TimeoutSec")
 }
 
+// TestValidateStepUpSeconds covers the AUTH_STEP_UP_SECONDS range: 60-900.
+func TestValidateStepUpSeconds(t *testing.T) {
+	for _, tc := range []struct {
+		value   string
+		wantErr bool
+	}{
+		{"59", true},
+		{"60", false},
+		{"900", false},
+		{"901", true},
+	} {
+		t.Run("AUTH_STEP_UP_SECONDS="+tc.value, func(t *testing.T) {
+			t.Setenv("AUTH_STEP_UP_SECONDS", tc.value)
+			_, err := Load()
+			if tc.wantErr {
+				require.Error(t, err)
+				assert.Contains(t, err.Error(), "AUTH_STEP_UP_SECONDS")
+				return
+			}
+			require.NoError(t, err)
+		})
+	}
+
+	t.Run("default 300", func(t *testing.T) {
+		cfg, err := Load()
+		require.NoError(t, err)
+		assert.Equal(t, 300, cfg.Auth.StepUpSec)
+	})
+}
+
 // setValidProdEnv sets the minimum valid prod configuration: real secrets and
 // public URLs, matching Validate's requirements.
 func setValidProdEnv(t *testing.T) {

@@ -1,5 +1,13 @@
 basePath: /api
 definitions:
+  controllers.StepUpInput:
+    properties:
+      code:
+        type: string
+      password:
+        maxLength: 255
+        type: string
+    type: object
   models.ChangePassword:
     properties:
       currentPassword:
@@ -304,6 +312,8 @@ definitions:
     type: object
   models.Login:
     properties:
+      code:
+        type: string
       email:
         maxLength: 255
         type: string
@@ -571,6 +581,24 @@ definitions:
         type: string
     required:
     - status
+    type: object
+  models.TOTPActivateInput:
+    properties:
+      code:
+        type: string
+    required:
+    - code
+    type: object
+  models.TOTPDisableInput:
+    properties:
+      code:
+        type: string
+      password:
+        maxLength: 255
+        type: string
+    required:
+    - code
+    - password
     type: object
   models.UpdateEndpointInput:
     properties:
@@ -1435,6 +1463,112 @@ paths:
             additionalProperties: true
             type: object
       summary: reset password with token
+      tags:
+      - Auth
+  /auth/step-up:
+    post:
+      consumes:
+      - application/json
+      description: Re-authenticate and mint a step-up token.
+      parameters:
+      - description: Password and/or authenticator code
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/controllers.StepUpInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - SessionCookie: []
+      summary: mint step-up token
+      tags:
+      - Auth
+  /auth/totp:
+    get:
+      description: Read the second-factor status of the session account.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - SessionCookie: []
+      summary: get TOTP status
+      tags:
+      - Auth
+  /auth/totp/activate:
+    post:
+      consumes:
+      - application/json
+      description: Confirm TOTP enrollment.
+      parameters:
+      - description: Authenticator code
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.TOTPActivateInput'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - SessionCookie: []
+      summary: activate TOTP
+      tags:
+      - Auth
+  /auth/totp/disable:
+    post:
+      consumes:
+      - application/json
+      description: Disable TOTP.
+      parameters:
+      - description: Password plus authenticator code
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/models.TOTPDisableInput'
+      produces:
+      - application/json
+      responses:
+        "204":
+          description: ok
+          schema:
+            type: string
+      security:
+      - SessionCookie: []
+      summary: disable TOTP
+      tags:
+      - Auth
+  /auth/totp/enroll:
+    post:
+      description: Start TOTP enrollment.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - SessionCookie: []
+      summary: enroll TOTP
       tags:
       - Auth
   /auth/verify-email:
